@@ -1,7 +1,7 @@
 import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
 
 @Entity({tableName: "product-color-sizes"})
-export class ProductSizeEntity {
+export class ProductColorSizeEntity {
 
     @PrimaryKey()
     id: number

@@ -1,7 +1,7 @@
 import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
 
-@Entity({tableName: "product_statuses"})
-export class ProductStatusEntity {
+@Entity({tableName: "product_color_statuses"})
+export class ProductColorStatusEntity {
 
     @PrimaryKey()
     id: number
@@ -15,7 +15,9 @@ export class ProductStatusEntity {
     @Property({default: false})
     is_default: boolean
 
-    constructor(title) {
+    constructor(title, position, is_default) {
         this.title = title
+        this.position = position
+        this.is_default = is_default
     }
 }

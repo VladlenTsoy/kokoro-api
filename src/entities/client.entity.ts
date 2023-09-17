@@ -1,19 +1,35 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+import {Entity, PrimaryKey, Property, Unique} from "@mikro-orm/core"
 
-@Entity()
-export class MikroBook {
+@Entity({tableName: "clients"})
+export class ClientEntity {
 
     @PrimaryKey()
-    id: number;
+    id: number
+
+    @Property({nullable: true})
+    phone?: string | null
 
     @Property()
-    title: string;
+    full_name: string
+
+    @Property({nullable: true})
+    @Unique()
+    email?: string | null
+
+    @Property({nullable: true})
+    password?: string | null
 
     @Property()
-    author: string;
+    source_id: number
 
-    constructor(title: string, author: string) {
-        this.title = title;
-        this.author = author;
+    @Property({type: "timestamp"})
+    created_at: Date = new Date()
+
+    constructor(phone, full_name, email, password, source_id) {
+        this.phone = phone
+        this.full_name = full_name
+        this.email = email
+        this.password = password
+        this.source_id = source_id
     }
 }

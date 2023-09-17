@@ -1,7 +1,7 @@
 import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
 
-@Entity({tableName: "sales"})
-export class TagEntity {
+@Entity({tableName: "sales-points"})
+export class SalesPointEntity {
 
     @PrimaryKey()
     id: number
@@ -9,7 +9,11 @@ export class TagEntity {
     @Property()
     title: string
 
-    constructor(title) {
+    @Property({type: "jsonb", nullable: true, default: null})
+    location: object
+
+    constructor(title: string, location: {lat: number, lng: number} | null) {
         this.title = title
+        this.location = location
     }
 }
