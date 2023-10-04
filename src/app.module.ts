@@ -1,20 +1,45 @@
 import {Module} from "@nestjs/common"
 import {AppController} from "./app.controller"
 import {AppService} from "./app.service"
-import {MikroOrmModule} from "@mikro-orm/nestjs"
-import mikroOrmConfig from "./config/mikro-orm.config"
-import {ConfigModule} from "@nestjs/config"
-import {CategoryEntity} from "./entities/category.entity"
 import {ProductModule} from "./modules/product/product.module"
+import {ProductColorModule} from "./modules/product-color/product-color.module"
+import {ProductColorTagModule} from "./modules/product-color-tag/product-color-tag.module"
+import {SizeModule} from "./modules/size/size.module"
+import {ColorModule} from "./modules/color/color.module"
+import {ProductCategoryModule} from "./modules/product-category/product-category.module"
+import {ConfigTypeORM} from "./config/type-orm.config"
+import {TypeOrmModule} from "@nestjs/typeorm"
+import {ProductCategoryEntity} from "./modules/product-category/entities/product-category.entity"
+import {ConfigModule, ConfigService} from "@nestjs/config"
 
 @Module({
     imports: [
         ConfigModule.forRoot({
-            load: [mikroOrmConfig]
+            isGlobal: true
         }),
-        MikroOrmModule.forRoot(mikroOrmConfig()),
-        MikroOrmModule.forFeature([CategoryEntity]),
-        ProductModule
+        TypeOrmModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+                type: "mysql",
+                host: configService.get<string>("DB_HOST"),
+                port: Number(configService.get<string>("DB_PORT")),
+                username: configService.get<string>("DB_USERNAME"),
+                password: configService.get<string>("DB_PASSWORD"),
+                database: configService.get<string>("DB_DATABASE"),
+                entities: [ProductCategoryEntity],
+                synchronize: configService.get<string>("APP_MODE") === "development",
+                migrationsTableName: "migrations",
+                migrations: ["./src/migrations/*.ts"]
+            })
+        }),
+        TypeOrmModule.forFeature([ProductCategoryEntity]),
+        ProductModule,
+        ProductColorModule,
+        ColorModule,
+        ProductColorTagModule,
+        SizeModule,
+        ProductCategoryModule
     ],
     controllers: [AppController],
     providers: [AppService]

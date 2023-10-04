@@ -1,45 +1,34 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "client_addresses"})
+@Entity("client_addresses")
 export class ClientAddressEntity {
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property()
+    @Column()
     title: string
 
-    @Property()
+    @Column()
     full_name: string
 
-    @Property()
+    @Column()
     phone: string
 
-    @Property({nullable: true})
+    @Column({nullable: true})
     country: string
 
-    @Property({nullable: true})
+    @Column({nullable: true})
     city: string
 
-    @Property({nullable: true})
+    @Column({nullable: true})
     address: string
 
-    @Property({nullable: true, type: "jsonb"})
+    @Column({nullable: true, type: "jsonb"})
     position: string
 
-    @Property()
+    @Column()
     client_id: number
 
-    @Property({type: "timestamp"})
+    @Column({type: "timestamp"})
     created_at: Date = new Date()
-
-    constructor(phone, full_name, email, password, source_id, created_at) {
-        this.phone = phone
-        this.full_name = full_name
-        this.phone = email
-        this.country = password
-        this.city = source_id
-        this.address = created_at
-        this.position = created_at
-        this.client_id = created_at
-    }
 }

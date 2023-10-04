@@ -1,19 +1,14 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "sales-points"})
+@Entity("sales-points")
 export class SalesPointEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property()
+    @Column()
     title: string
 
-    @Property({type: "jsonb", nullable: true, default: null})
+    @Column({type: "jsonb", nullable: true, default: null})
     location: object
-
-    constructor(title: string, location: {lat: number, lng: number} | null) {
-        this.title = title
-        this.location = location
-    }
 }

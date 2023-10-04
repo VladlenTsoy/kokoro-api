@@ -1,23 +1,17 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "product_color_statuses"})
+@Entity("product_color_statuses")
 export class ProductColorStatusEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property()
+    @Column()
     title: string
 
-    @Property()
+    @Column()
     position: number
 
-    @Property({default: false})
+    @Column({default: false})
     is_default: boolean
-
-    constructor(title, position, is_default) {
-        this.title = title
-        this.position = position
-        this.is_default = is_default
-    }
 }

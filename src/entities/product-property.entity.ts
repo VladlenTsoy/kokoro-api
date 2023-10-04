@@ -1,21 +1,17 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "product_properties"})
+@Entity("product_properties")
 export class ProductPropertyEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property()
+    @Column()
     title: string
 
-    @Property()
+    @Column()
     description: string
 
-    @Property({default: false})
+    @Column({default: false})
     is_global: boolean
-
-    constructor(title) {
-        this.title = title
-    }
 }

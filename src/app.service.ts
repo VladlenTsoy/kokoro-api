@@ -1,18 +1,20 @@
 import {Injectable} from "@nestjs/common"
-import {CategoryEntity} from "./entities/category.entity"
-import {InjectRepository} from "@mikro-orm/nestjs"
-import {EntityRepository} from "@mikro-orm/mysql"
+import {ProductCategoryEntity} from "./modules/product-category/entities/product-category.entity"
+import {InjectRepository} from "@nestjs/typeorm"
+import {Repository} from "typeorm"
 
 @Injectable()
 export class AppService {
-    constructor(@InjectRepository(CategoryEntity) private readonly authorRepository: EntityRepository<CategoryEntity>) {
+    constructor(
+        @InjectRepository(ProductCategoryEntity)
+        private categoryRepository: Repository<ProductCategoryEntity>
+    ) {
     }
 
     async getHello(): Promise<string> {
-        const author = new CategoryEntity("Верхняя одежда", null)
-        // wrap(author).assign({title: "Верхняя одежда"})
-        await this.authorRepository.persistAndFlush(author)
-
-        return author.url
+        const category = await this.categoryRepository.create({title: "Верхняя одежда"})
+        await this.categoryRepository.save(category)
+        console.log(category)
+        return category.url
     }
 }

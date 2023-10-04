@@ -1,26 +1,20 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "product-color-discounts"})
+@Entity("product-color-discounts")
 export class ProductColorDiscountEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property({type: "float"})
+    @Column({type: "float"})
     discount: number
 
-    @Property()
+    @Column()
     product_color_id: number
 
-    @Property({type: "datetime"})
+    @Column({type: "datetime"})
     end_at: string
 
-    @Property({type: "timestamp"})
+    @Column({type: "timestamp"})
     created_at: Date = new Date()
-
-    constructor(discount, end_at, product_color_id) {
-        this.discount = discount
-        this.end_at = end_at
-        this.product_color_id = product_color_id
-    }
 }

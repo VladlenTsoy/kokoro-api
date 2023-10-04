@@ -1,23 +1,17 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "product-color-sizes"})
+@Entity("product-color-sizes")
 export class ProductColorSizeEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property()
+    @Column()
     product_color_id: number
 
-    @Property()
+    @Column()
     size_id: string
 
-    @Property()
+    @Column()
     cost_price: number
-
-    constructor(product_color_id, size_id, cost_price) {
-        this.product_color_id = product_color_id
-        this.size_id = size_id
-        this.cost_price = cost_price
-    }
 }

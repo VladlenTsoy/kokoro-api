@@ -1,35 +1,26 @@
-import {Entity, PrimaryKey, Property, Unique} from "@mikro-orm/core"
+import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "clients"})
+@Entity("clients")
 export class ClientEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property({nullable: true})
+    @Column({nullable: true})
     phone?: string | null
 
-    @Property()
+    @Column()
     full_name: string
 
-    @Property({nullable: true})
-    @Unique()
+    @Column({nullable: true, unique: true})
     email?: string | null
 
-    @Property({nullable: true})
+    @Column({nullable: true})
     password?: string | null
 
-    @Property()
+    @Column()
     source_id: number
 
-    @Property({type: "timestamp"})
+    @Column({type: "timestamp"})
     created_at: Date = new Date()
-
-    constructor(phone, full_name, email, password, source_id) {
-        this.phone = phone
-        this.full_name = full_name
-        this.email = email
-        this.password = password
-        this.source_id = source_id
-    }
 }

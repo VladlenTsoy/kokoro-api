@@ -1,18 +1,14 @@
-import {Entity, PrimaryKey, Property} from "@mikro-orm/core"
+import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity({tableName: "products"})
+@Entity("products")
 export class ProductEntity {
 
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id: number
 
-    @Property()
+    @Column()
     category_id: number
 
-    @Property({type: "timestamp"})
+    @Column({type: "timestamp"})
     created_at: Date = new Date()
-
-    constructor(category_id) {
-        this.category_id = category_id
-    }
 }
