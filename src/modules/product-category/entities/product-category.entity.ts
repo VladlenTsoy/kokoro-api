@@ -10,7 +10,7 @@ export class ProductCategoryEntity {
     title: string
 
     @Column({nullable: true, default: null})
-    category_id: number
+    parent_category_id: number
 
     public get url() {
         return transliteration(this.title).toLowerCase().trim().replaceAll(" ", "-")
