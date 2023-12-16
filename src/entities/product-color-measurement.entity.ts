@@ -1,6 +1,6 @@
 import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity("product-color-measurements")
+@Entity("product_color_measurements")
 export class ProductColorMeasurementEntity {
 
     @PrimaryGeneratedColumn()
@@ -9,7 +9,7 @@ export class ProductColorMeasurementEntity {
     @Column()
     title: number
 
-    @Column({type: "jsonb"})
+    @Column({type: "json"})
     description: object
 
     @Column()

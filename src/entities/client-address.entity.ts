@@ -23,7 +23,7 @@ export class ClientAddressEntity {
     @Column({nullable: true})
     address: string
 
-    @Column({nullable: true, type: "jsonb"})
+    @Column({nullable: true, type: "json"})
     position: string
 
     @Column()

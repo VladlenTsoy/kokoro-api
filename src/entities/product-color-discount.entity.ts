@@ -1,6 +1,6 @@
 import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity("product-color-discounts")
+@Entity("product_color_discounts")
 export class ProductColorDiscountEntity {
 
     @PrimaryGeneratedColumn()

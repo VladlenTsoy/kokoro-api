@@ -12,7 +12,7 @@ export class AppService {
     }
 
     async getHello(): Promise<string> {
-        const category = await this.categoryRepository.create({title: "Верхняя одежда"})
+        const category = this.categoryRepository.create({title: "Верхняя одежда"})
         await this.categoryRepository.save(category)
         console.log(category)
         return category.url

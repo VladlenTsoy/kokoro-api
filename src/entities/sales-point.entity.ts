@@ -1,6 +1,6 @@
 import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity("sales-points")
+@Entity("sales_points")
 export class SalesPointEntity {
 
     @PrimaryGeneratedColumn()
@@ -9,6 +9,6 @@ export class SalesPointEntity {
     @Column()
     title: string
 
-    @Column({type: "jsonb", nullable: true, default: null})
+    @Column({type: "json", nullable: true, default: null})
     location: object
 }

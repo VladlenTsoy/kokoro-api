@@ -1,6 +1,6 @@
 import {Entity, Column, PrimaryGeneratedColumn} from "typeorm"
 
-@Entity("product-color-tags")
+@Entity("product_color_tags")
 export class ProductColorTagEntity {
 
     @PrimaryGeneratedColumn()
