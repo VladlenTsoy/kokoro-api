@@ -1,34 +1,64 @@
-import {Injectable} from "@nestjs/common"
+import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateColorDto} from "./dto/create-color.dto"
 import {UpdateColorDto} from "./dto/update-color.dto"
-// import {ColorEntity} from "./entities/color.entity"
+import {ColorEntity} from "./entities/color.entity"
+import {Repository} from "typeorm"
+import {InjectRepository} from "@nestjs/typeorm"
 
 @Injectable()
 export class ColorService {
     constructor(
-        // @InjectRepository(ColorEntity)
-        // private readonly colorRepository: EntityRepository<ColorEntity>
+        @InjectRepository(ColorEntity)
+        private readonly colorRepository: Repository<ColorEntity>
     ) {
     }
 
-    create(createColorDto: CreateColorDto) {
-        // const colorEntity = new ColorEntity()
-        return " colorEntity"
+    /**
+     * Error output not found
+     * @private
+     */
+    private errorNotFound() {
+        throw new NotFoundException("The color was not found")
+    }
+
+    async create(createColorDto: CreateColorDto) {
+        const color = this.colorRepository.create(createColorDto)
+        // Save color
+        await this.colorRepository.save(color)
+        return color
     }
 
     findAll() {
-        return `This action returns all color`
+        return this.colorRepository.find()
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} color`
+    async findOne(id: number) {
+        const color = await this.colorRepository.findOneBy({id})
+        // Not found product category
+        if (!color) this.errorNotFound()
+
+        return color
     }
 
-    update(id: number, updateColorDto: UpdateColorDto) {
-        return `This action updates a #${id} color`
+    async update(id: number, updateColorDto: UpdateColorDto) {
+        const color = await this.colorRepository.findOneBy({id})
+        // Not found product category
+        if (!color) this.errorNotFound()
+        // Required field
+        color.title = updateColorDto.title
+        color.hex = updateColorDto.hex
+        // Not required field
+        if (updateColorDto.is_hide)
+            color.is_hide = updateColorDto.is_hide
+
+        return await this.colorRepository.save(color)
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} color`
+    async remove(id: number) {
+        const color = await this.colorRepository.delete(id)
+        // Not found product category
+        if (!color.affected) this.errorNotFound()
+        // Success message
+        return {message: "Color has been successfully removed"}
     }
 }

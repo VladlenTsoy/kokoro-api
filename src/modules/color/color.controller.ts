@@ -1,34 +1,71 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ColorService } from './color.service';
-import { CreateColorDto } from './dto/create-color.dto';
-import { UpdateColorDto } from './dto/update-color.dto';
+import {Body, Controller, Delete, Get, Param, Patch, Post} from "@nestjs/common"
+import {ColorService} from "./color.service"
+import {CreateColorDto} from "./dto/create-color.dto"
+import {UpdateColorDto} from "./dto/update-color.dto"
+import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
+import {ColorEntity} from "./entities/color.entity"
 
-@Controller('color')
+@ApiBearerAuth()
+@ApiTags("Colors")
+@Controller("color")
 export class ColorController {
-  constructor(private readonly colorService: ColorService) {}
+    constructor(private readonly colorService: ColorService) {
+    }
 
-  @Post()
-  create(@Body() createColorDto: CreateColorDto) {
-    return this.colorService.create(createColorDto);
-  }
+    @Post()
+    @ApiOperation({summary: "Create Color"})
+    @ApiBody({type: CreateColorDto})
+    @ApiResponse({
+        status: 200,
+        description: "New color created",
+        type: ColorEntity
+    })
+    create(@Body() createColorDto: CreateColorDto) {
+        return this.colorService.create(createColorDto)
+    }
 
-  @Get()
-  findAll() {
-    return this.colorService.findAll();
-  }
+    @Get()
+    @ApiOperation({summary: "Get all colors"})
+    @ApiResponse({
+        status: 200,
+        description: "List of all colors",
+        type: ColorEntity,
+        isArray: true
+    })
+    findAll() {
+        return this.colorService.findAll()
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.colorService.findOne(+id);
-  }
+    @Get(":id")
+    @ApiOperation({summary: "Get color by id"})
+    @ApiResponse({
+        status: 200,
+        description: "Color by id",
+        type: ColorEntity
+    })
+    findOne(@Param("id") id: string) {
+        return this.colorService.findOne(+id)
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateColorDto: UpdateColorDto) {
-    return this.colorService.update(+id, updateColorDto);
-  }
+    @Patch(":id")
+    @ApiOperation({summary: "Update color by id"})
+    @ApiBody({type: UpdateColorDto})
+    @ApiResponse({
+        status: 200,
+        description: "Updated color by id",
+        type: ColorEntity
+    })
+    update(@Param("id") id: string, @Body() updateColorDto: UpdateColorDto) {
+        return this.colorService.update(+id, updateColorDto)
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.colorService.remove(+id);
-  }
+    @Delete(":id")
+    @ApiOperation({summary: "Delete color by id"})
+    @ApiResponse({
+        status: 200,
+        description: "Deleted color by id"
+    })
+    remove(@Param("id") id: string) {
+        return this.colorService.remove(+id)
+    }
 }
