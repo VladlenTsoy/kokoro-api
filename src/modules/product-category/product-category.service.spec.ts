@@ -2,7 +2,6 @@ import {Test, TestingModule} from "@nestjs/testing"
 import {ProductCategoryService} from "./product-category.service"
 import {TypeOrmModule} from "@nestjs/typeorm"
 import {ProductCategoryEntity} from "./entities/product-category.entity"
-import {ProductCategoryController} from "./product-category.controller"
 
 describe("ProductCategoryService", () => {
     let service: ProductCategoryService
