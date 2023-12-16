@@ -1,8 +1,8 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, ValidationPipe} from "@nestjs/common"
 import {ProductCategoryService} from "./product-category.service"
 import {CreateProductCategoryDto} from "./dto/create-product-category.dto"
 import {UpdateProductCategoryDto} from "./dto/update-product-category.dto"
-import {ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger"
+import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {ProductCategoryEntity} from "./entities/product-category.entity"
 
 @ApiBearerAuth()
