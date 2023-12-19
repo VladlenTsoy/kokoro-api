@@ -6,7 +6,7 @@ import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestj
 import {ProductCategoryEntity} from "./entities/product-category.entity"
 
 @ApiBearerAuth()
-@ApiTags("Product categories")
+@ApiTags("Product category")
 @Controller("product-category")
 export class ProductCategoryController {
     constructor(private readonly productCategoryService: ProductCategoryService) {
