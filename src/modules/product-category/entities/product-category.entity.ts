@@ -21,11 +21,15 @@ export class ProductCategoryEntity {
         return transliteration(this.title).toLowerCase().trim().replaceAll(" ", "-")
     }
 
-    @ApiProperty({example: true, description: "The hide of the product category", required: false})
+    @ApiProperty({example: true, description: "The hide of the product category", required: false, default: null})
     @Column({nullable: true, default: null})
     is_hide: boolean
 
-    @ApiProperty({example: "2023-12-16T11:21:52.000Z", description: "The created at of the product category", required: true})
+    @ApiProperty({
+        example: "2023-12-16T11:21:52.000Z",
+        description: "The created at of the product category",
+        required: true
+    })
     @CreateDateColumn({type: "timestamp"})
     created_at: Date = new Date()
 

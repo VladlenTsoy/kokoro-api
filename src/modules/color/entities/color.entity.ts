@@ -15,7 +15,7 @@ export class ColorEntity {
     @Column()
     hex: string
 
-    @ApiProperty({example: true, description: "The hide of the product category", required: false})
+    @ApiProperty({example: true, description: "The hide of the product category", required: false, default: null})
     @Column({nullable: true, default: null})
     is_hide: boolean
 }
