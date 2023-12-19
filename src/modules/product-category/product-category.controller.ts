@@ -13,7 +13,7 @@ export class ProductCategoryController {
     }
 
     @Post()
-    @ApiOperation({summary: "Create Product Category"})
+    @ApiOperation({summary: "Create product category"})
     @ApiBody({type: CreateProductCategoryDto})
     @ApiResponse({
         status: 200,

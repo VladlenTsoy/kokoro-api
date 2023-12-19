@@ -13,7 +13,7 @@ export class ColorController {
     }
 
     @Post()
-    @ApiOperation({summary: "Create Color"})
+    @ApiOperation({summary: "Create color"})
     @ApiBody({type: CreateColorDto})
     @ApiResponse({
         status: 200,
