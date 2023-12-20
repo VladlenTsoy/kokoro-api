@@ -8,7 +8,6 @@ import {SizeModule} from "./modules/size/size.module"
 import {ColorModule} from "./modules/color/color.module"
 import {ProductCategoryModule} from "./modules/product-category/product-category.module"
 import {TypeOrmModule} from "@nestjs/typeorm"
-import {ProductCategoryEntity} from "./modules/product-category/entities/product-category.entity"
 import {ConfigModule} from "@nestjs/config"
 import {configDataSource} from "../ormconfig"
 
@@ -18,7 +17,6 @@ import {configDataSource} from "../ormconfig"
             isGlobal: true
         }),
         TypeOrmModule.forRoot(configDataSource),
-        TypeOrmModule.forFeature([ProductCategoryEntity]),
         ProductModule,
         ProductColorModule,
         ColorModule,
