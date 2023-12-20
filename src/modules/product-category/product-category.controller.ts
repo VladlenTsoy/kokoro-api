@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, ValidationPipe} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
 import {ProductCategoryService} from "./product-category.service"
 import {CreateProductCategoryDto} from "./dto/create-product-category.dto"
 import {UpdateProductCategoryDto} from "./dto/update-product-category.dto"
@@ -20,7 +20,8 @@ export class ProductCategoryController {
         description: "New product category created",
         type: ProductCategoryEntity
     })
-    create(@Body(new ValidationPipe({transform: true})) createProductCategoryDto: CreateProductCategoryDto) {
+    @UsePipes(new ValidationPipe({transform: true}))
+    create(@Body() createProductCategoryDto: CreateProductCategoryDto) {
         return this.productCategoryService.create(createProductCategoryDto)
     }
 
@@ -55,6 +56,7 @@ export class ProductCategoryController {
         description: "Updated product category by id",
         type: ProductCategoryEntity,
     })
+    @UsePipes(new ValidationPipe({transform: true}))
     update(@Param("id") id: string, @Body() updateProductCategoryDto: UpdateProductCategoryDto) {
         return this.productCategoryService.update(+id, updateProductCategoryDto)
     }
