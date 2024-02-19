@@ -48,8 +48,8 @@ export class ColorService {
         color.title = updateColorDto.title
         color.hex = updateColorDto.hex
         // Not required field
-        if (updateColorDto.is_hide)
-            color.is_hide = updateColorDto.is_hide
+        if (updateColorDto.deleted_at)
+            color.deleted_at = updateColorDto.deleted_at
 
         return await this.colorRepository.save(color)
     }

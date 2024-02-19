@@ -15,7 +15,12 @@ export class ColorEntity {
     @Column()
     hex: string
 
-    @ApiProperty({example: true, description: "The hide of the product category", required: false, default: null})
+    @ApiProperty({
+        example: "2024-02-20T14:30:00Z",
+        description: "The timestamp indicating when the record was marked as deleted",
+        required: false,
+        default: null
+    })
     @Column({nullable: true, default: null})
-    is_hide: boolean
+    deleted_at: string
 }
