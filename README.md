@@ -30,6 +30,18 @@ npm install
 ### Настройка Среды
 Создайте .env файл на основе .env.example и заполните необходимые переменные среды.
 
+```bash
+APP_MODE="delvelopment"
+# Database
+DB_HOST="localhost"
+DB_PORT=3306
+DB_USERNAME="root"
+DB_PASSWORD=""
+DB_NAME="database"
+# phpMyAdmin
+PHPMYADMIN_PORT=9000
+```
+
 ### Запуск Docker Контейнеров
 
 ```bash
@@ -40,13 +52,9 @@ docker-compose up -d
 
 Скопируйте **ormconfig.example.ts** в **ormconfig.ts** и настройте параметры подключения к базе данных.
 
+
+
 ### Миграция Базы Данных
-
-Инициализация миграции
-
-```bash
-npm run migration:run
-```
 
 Запуск миграции
 
