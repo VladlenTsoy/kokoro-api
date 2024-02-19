@@ -7,7 +7,7 @@ import {ColorEntity} from "./entities/color.entity"
 
 @ApiBearerAuth()
 @ApiTags("Colors")
-@Controller("color")
+@Controller("admin/color")
 export class ColorController {
     constructor(private readonly colorService: ColorService) {
     }

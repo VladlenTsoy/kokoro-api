@@ -4,10 +4,13 @@ import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger"
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {abortOnError: false})
+    app.setGlobalPrefix("api")
 
     const config = new DocumentBuilder()
-        .setTitle("Cats example")
-        .setDescription("The cats API description")
+        .setTitle("Kokoro API")
+        .setDescription(
+            "This documentation provides a detailed overview of our CRM system's API, offering essential information on authentication methods, available endpoints, and their usage. Here, you will find comprehensive examples of requests and responses, designed to facilitate the seamless integration of your application with our system."
+        )
         .setVersion("1.0")
         .build()
 

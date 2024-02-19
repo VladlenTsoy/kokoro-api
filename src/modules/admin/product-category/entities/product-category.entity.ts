@@ -1,5 +1,5 @@
 import {Entity, Column, PrimaryGeneratedColumn, CreateDateColumn} from "typeorm"
-import {transliteration} from "../../../utils/transliteration"
+import {transliteration} from "src/utils/transliteration"
 import {ApiProperty} from "@nestjs/swagger"
 
 @Entity("product_categories")
