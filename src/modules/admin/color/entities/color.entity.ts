@@ -8,11 +8,11 @@ export class ColorEntity {
     id: number
 
     @ApiProperty({example: "Color title", description: "The title of the color", required: true})
-    @Column()
+    @Column({type: "varchar", length: 20})
     title: string
 
     @ApiProperty({example: "#FFFFFF", description: "The hex of the color", required: true})
-    @Column()
+    @Column({type: "varchar", length: 8})
     hex: string
 
     @ApiProperty({
@@ -21,6 +21,6 @@ export class ColorEntity {
         required: false,
         default: null
     })
-    @Column({nullable: true, default: null})
-    deleted_at: string
+    @Column({type: "timestamp", nullable: true, default: null})
+    deleted_at: Date
 }

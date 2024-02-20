@@ -2,7 +2,7 @@ import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateSizeDto} from "./dto/create-size.dto"
 import {UpdateSizeDto} from "./dto/update-size.dto"
 import {InjectRepository} from "@nestjs/typeorm"
-import {Repository} from "typeorm"
+import {IsNull, Repository} from "typeorm"
 import {SizeEntity} from "./entities/size.entity"
 
 @Injectable()
@@ -29,11 +29,11 @@ export class SizeService {
     }
 
     findAll() {
-        return this.sizeRepository.find()
+        return this.sizeRepository.find({where: {deleted_at: IsNull()}})
     }
 
     async findOne(id: number) {
-        const color = await this.sizeRepository.findOneBy({id})
+        const color = await this.sizeRepository.findOneBy({id, deleted_at: IsNull()})
         // Not found
         if (!color) this.errorNotFound()
 
@@ -41,22 +41,24 @@ export class SizeService {
     }
 
     async update(id: number, updateSizeDto: UpdateSizeDto) {
-        const size = await this.sizeRepository.findOneBy({id})
+        const size = await this.sizeRepository.findOneBy({id, deleted_at: IsNull()})
         // Not found
         if (!size) this.errorNotFound()
         // Required field
         size.title = updateSizeDto.title
-        // Not required field
-        if (updateSizeDto.is_hide)
-            size.is_hide = updateSizeDto.is_hide
 
         return await this.sizeRepository.save(size)
     }
 
     async remove(id: number) {
-        const size = await this.sizeRepository.delete(id)
-        // Not found product category
-        if (!size.affected) this.errorNotFound()
+        const size = await this.sizeRepository.findOneBy({id, deleted_at: IsNull()})
+        // Not found size
+        if (!size) this.errorNotFound()
+        // Fields
+        size.deleted_at = new Date()
+        // Save
+        await this.sizeRepository.save(size)
+        // const size = await this.sizeRepository.delete(id)
         // Success message
         return {message: "Size has been successfully removed"}
     }

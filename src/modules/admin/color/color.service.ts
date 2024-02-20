@@ -2,7 +2,7 @@ import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateColorDto} from "./dto/create-color.dto"
 import {UpdateColorDto} from "./dto/update-color.dto"
 import {ColorEntity} from "./entities/color.entity"
-import {Repository} from "typeorm"
+import {Repository, IsNull} from "typeorm"
 import {InjectRepository} from "@nestjs/typeorm"
 
 @Injectable()
@@ -29,35 +29,37 @@ export class ColorService {
     }
 
     findAll() {
-        return this.colorRepository.find()
+        return this.colorRepository.find({where: {deleted_at: IsNull()}})
     }
 
     async findOne(id: number) {
-        const color = await this.colorRepository.findOneBy({id})
-        // Not found product category
+        const color = await this.colorRepository.findOneBy({id, deleted_at: IsNull()})
+        // Not found color
         if (!color) this.errorNotFound()
 
         return color
     }
 
     async update(id: number, updateColorDto: UpdateColorDto) {
-        const color = await this.colorRepository.findOneBy({id})
-        // Not found product category
+        const color = await this.colorRepository.findOneBy({id, deleted_at: IsNull()})
+        // Not found color
         if (!color) this.errorNotFound()
-        // Required field
+        // Required fields
         color.title = updateColorDto.title
         color.hex = updateColorDto.hex
-        // Not required field
-        if (updateColorDto.deleted_at)
-            color.deleted_at = updateColorDto.deleted_at
 
         return await this.colorRepository.save(color)
     }
 
     async remove(id: number) {
-        const color = await this.colorRepository.delete(id)
-        // Not found product category
-        if (!color.affected) this.errorNotFound()
+        const color = await this.colorRepository.findOneBy({id, deleted_at: IsNull()})
+        // Not found color
+        if (!color) this.errorNotFound()
+        // Fields
+        color.deleted_at = new Date()
+        // Save
+        await this.colorRepository.save(color)
+        // const color = await this.colorRepository.delete(id)
         // Success message
         return {message: "Color has been successfully removed"}
     }

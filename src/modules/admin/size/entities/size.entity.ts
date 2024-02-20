@@ -16,15 +16,15 @@ export class SizeEntity {
         description: "The title of the size",
         required: true
     })
-    @Column()
+    @Column({type: "varchar", length: 20})
     title: string
 
     @ApiProperty({
-        example: true,
-        description: "The hide of the product category",
+        example: "2024-02-20T14:30:00Z",
+        description: "The timestamp indicating when the record was marked as deleted",
         required: false,
         default: null
     })
-    @Column({nullable: true, default: null})
-    is_hide: boolean
+    @Column({type: "timestamp", nullable: true, default: null})
+    deleted_at: Date
 }

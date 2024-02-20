@@ -7,7 +7,7 @@ import {SizeEntity} from "./entities/size.entity"
 
 @ApiBearerAuth()
 @ApiTags("Size")
-@Controller("size")
+@Controller("admin/size")
 export class SizeController {
     constructor(private readonly sizeService: SizeService) {
     }
