@@ -21,7 +21,8 @@ export class SizeEntity {
 
     @ApiProperty({
         example: "2024-02-20T14:30:00Z",
-        description: "The timestamp indicating when the record was marked as deleted",
+        description:
+            "The timestamp indicating when the record was marked as deleted",
         required: false,
         default: null
     })

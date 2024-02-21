@@ -10,8 +10,7 @@ export class SizeService {
     constructor(
         @InjectRepository(SizeEntity)
         private readonly sizeRepository: Repository<SizeEntity>
-    ) {
-    }
+    ) {}
 
     /**
      * Error output not found
@@ -33,7 +32,10 @@ export class SizeService {
     }
 
     async findOne(id: number) {
-        const color = await this.sizeRepository.findOneBy({id, deleted_at: IsNull()})
+        const color = await this.sizeRepository.findOneBy({
+            id,
+            deleted_at: IsNull()
+        })
         // Not found
         if (!color) this.errorNotFound()
 
@@ -41,7 +43,10 @@ export class SizeService {
     }
 
     async update(id: number, updateSizeDto: UpdateSizeDto) {
-        const size = await this.sizeRepository.findOneBy({id, deleted_at: IsNull()})
+        const size = await this.sizeRepository.findOneBy({
+            id,
+            deleted_at: IsNull()
+        })
         // Not found
         if (!size) this.errorNotFound()
         // Required field
@@ -51,7 +56,10 @@ export class SizeService {
     }
 
     async remove(id: number) {
-        const size = await this.sizeRepository.findOneBy({id, deleted_at: IsNull()})
+        const size = await this.sizeRepository.findOneBy({
+            id,
+            deleted_at: IsNull()
+        })
         // Not found size
         if (!size) this.errorNotFound()
         // Fields

@@ -1,16 +1,31 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    UsePipes,
+    ValidationPipe
+} from "@nestjs/common"
 import {SizeService} from "./size.service"
 import {CreateSizeDto} from "./dto/create-size.dto"
 import {UpdateSizeDto} from "./dto/update-size.dto"
-import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiOperation,
+    ApiResponse,
+    ApiTags
+} from "@nestjs/swagger"
 import {SizeEntity} from "./entities/size.entity"
 
 @ApiBearerAuth()
 @ApiTags("Size")
 @Controller("admin/size")
 export class SizeController {
-    constructor(private readonly sizeService: SizeService) {
-    }
+    constructor(private readonly sizeService: SizeService) {}
 
     @Post()
     @ApiOperation({summary: "Create size"})
@@ -42,7 +57,7 @@ export class SizeController {
     @ApiResponse({
         status: 200,
         description: "Size by id",
-        type: SizeEntity,
+        type: SizeEntity
     })
     findOne(@Param("id") id: string) {
         return this.sizeService.findOne(+id)
@@ -54,7 +69,7 @@ export class SizeController {
     @ApiResponse({
         status: 200,
         description: "Updated size by id",
-        type: SizeEntity,
+        type: SizeEntity
     })
     @UsePipes(new ValidationPipe({transform: true}))
     update(@Param("id") id: string, @Body() updateSizeDto: UpdateSizeDto) {

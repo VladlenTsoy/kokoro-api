@@ -10,8 +10,7 @@ export class ColorService {
     constructor(
         @InjectRepository(ColorEntity)
         private readonly colorRepository: Repository<ColorEntity>
-    ) {
-    }
+    ) {}
 
     /**
      * Error output not found
@@ -33,7 +32,10 @@ export class ColorService {
     }
 
     async findOne(id: number) {
-        const color = await this.colorRepository.findOneBy({id, deleted_at: IsNull()})
+        const color = await this.colorRepository.findOneBy({
+            id,
+            deleted_at: IsNull()
+        })
         // Not found color
         if (!color) this.errorNotFound()
 
@@ -41,7 +43,10 @@ export class ColorService {
     }
 
     async update(id: number, updateColorDto: UpdateColorDto) {
-        const color = await this.colorRepository.findOneBy({id, deleted_at: IsNull()})
+        const color = await this.colorRepository.findOneBy({
+            id,
+            deleted_at: IsNull()
+        })
         // Not found color
         if (!color) this.errorNotFound()
         // Required fields
@@ -52,7 +57,10 @@ export class ColorService {
     }
 
     async remove(id: number) {
-        const color = await this.colorRepository.findOneBy({id, deleted_at: IsNull()})
+        const color = await this.colorRepository.findOneBy({
+            id,
+            deleted_at: IsNull()
+        })
         // Not found color
         if (!color) this.errorNotFound()
         // Fields
