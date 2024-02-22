@@ -2,7 +2,7 @@ import {Entity, PrimaryGeneratedColumn, CreateDateColumn} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
 
 @Entity("products")
-export class Product {
+export class ProductEntity {
     @ApiProperty({
         example: 1,
         description: "The id of the product",
