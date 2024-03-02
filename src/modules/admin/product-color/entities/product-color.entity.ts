@@ -1,15 +1,7 @@
 import {ApiProperty} from "@nestjs/swagger"
-import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
-    JoinColumn,
-    OneToOne,
-    OneToMany
-} from "typeorm"
+import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, JoinColumn, OneToOne, OneToMany} from "typeorm"
 import {ColorEntity} from "../../color/entities/color.entity"
-import {ProductSizeEntity} from "./product-size.entity"
+import {ProductColorSizeEntity} from "./product-color-size.entity"
 
 @Entity("product_colors")
 export class ProductColorEntity {
@@ -61,10 +53,14 @@ export class ProductColorEntity {
     @CreateDateColumn({type: "timestamp"})
     created_at: Date = new Date()
 
+    @ApiProperty()
     @OneToOne(() => ColorEntity)
     @JoinColumn({name: "color_id"})
     color: ColorEntity
 
-    @OneToMany(() => ProductSizeEntity, (size) => size.productColor)
-    sizes: ProductSizeEntity[]
+    @ApiProperty({
+        type: [ProductColorEntity]
+    })
+    @OneToMany(() => ProductColorSizeEntity, (size) => size.productColor)
+    sizes: ProductColorSizeEntity[]
 }

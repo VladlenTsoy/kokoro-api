@@ -5,18 +5,16 @@ import {ProductService} from "./services/product.service"
 import {TypeOrmModule} from "@nestjs/typeorm"
 import {ProductEntity} from "./entities/product.entity"
 import {ProductColorEntity} from "./entities/product-color.entity"
-import {ProductSizeEntity} from "./entities/product-size.entity"
-import {ProductSizeService} from "./services/product-size.service"
+import {ProductColorSizeEntity} from "./entities/product-color-size.entity"
+import {ProductColorSizeService} from "./services/product-color-size.service"
+import {ProductColorImageService} from "./services/product-color-image.service"
+import {ProductColorImageEntity} from "./entities/product-color-image.entity"
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([
-            ProductEntity,
-            ProductColorEntity,
-            ProductSizeEntity
-        ])
+        TypeOrmModule.forFeature([ProductEntity, ProductColorEntity, ProductColorSizeEntity, ProductColorImageEntity])
     ],
     controllers: [ProductColorController],
-    providers: [ProductColorService, ProductService, ProductSizeService]
+    providers: [ProductColorService, ProductService, ProductColorSizeService, ProductColorImageService]
 })
 export class ProductColorModule {}

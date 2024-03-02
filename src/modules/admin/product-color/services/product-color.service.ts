@@ -5,7 +5,8 @@ import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {ProductColorEntity} from "../entities/product-color.entity"
 import {ProductService} from "./product.service"
-import {ProductSizeService} from "./product-size.service"
+import {ProductColorSizeService} from "./product-color-size.service"
+import {ProductColorImageService} from "./product-color-image.service"
 
 @Injectable()
 export class ProductColorService {
@@ -13,7 +14,8 @@ export class ProductColorService {
         @InjectRepository(ProductColorEntity)
         private readonly productColorRepository: Repository<ProductColorEntity>,
         private readonly productService: ProductService,
-        private readonly productSizeService: ProductSizeService
+        private readonly productSizeService: ProductColorSizeService,
+        private readonly productColorImageService: ProductColorImageService
     ) {}
 
     async create(createProductColorDto: CreateProductColorDto) {
@@ -45,6 +47,18 @@ export class ProductColorService {
                 })
             })
         )
+
+        // Create product images
+        if (createProductColorDto.product_images && createProductColorDto.product_images.length) {
+            await Promise.all(
+                createProductColorDto.product_images.map(async (productImage) => {
+                    await this.productColorImageService.create({
+                        ...productImage,
+                        product_color_id: productColor.id
+                    })
+                })
+            )
+        }
 
         return productColor
     }

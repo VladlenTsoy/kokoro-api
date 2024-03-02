@@ -1,24 +1,8 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    UsePipes,
-    ValidationPipe
-} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
 import {ProductColorService} from "./services/product-color.service"
 import {CreateProductColorDto} from "./dto/create-product-color.dto"
 import {UpdateProductColorDto} from "./dto/update-product-color.dto"
-import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOperation,
-    ApiResponse,
-    ApiTags
-} from "@nestjs/swagger"
+import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {ProductColorEntity} from "./entities/product-color.entity"
 
 @ApiBearerAuth()
@@ -33,7 +17,7 @@ export class ProductColorController {
     @UsePipes(new ValidationPipe({transform: true}))
     @ApiResponse({
         status: 200,
-        description: "New color created",
+        description: "New product color created",
         type: ProductColorEntity
     })
     create(@Body() createProductColorDto: CreateProductColorDto) {
@@ -41,6 +25,13 @@ export class ProductColorController {
     }
 
     @Get()
+    @ApiOperation({summary: "Get all product colors"})
+    @ApiResponse({
+        status: 200,
+        description: "List of all product colors",
+        type: ProductColorEntity,
+        isArray: true
+    })
     findAll() {
         return this.productColorService.findAll()
     }
@@ -51,10 +42,7 @@ export class ProductColorController {
     }
 
     @Patch(":id")
-    update(
-        @Param("id") id: string,
-        @Body() updateProductColorDto: UpdateProductColorDto
-    ) {
+    update(@Param("id") id: string, @Body() updateProductColorDto: UpdateProductColorDto) {
         return this.productColorService.update(+id, updateProductColorDto)
     }
 

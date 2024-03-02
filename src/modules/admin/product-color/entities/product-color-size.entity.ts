@@ -1,17 +1,10 @@
-import {
-    Column,
-    Entity,
-    JoinColumn,
-    PrimaryGeneratedColumn,
-    ManyToOne,
-    OneToOne
-} from "typeorm"
+import {Column, Entity, JoinColumn, PrimaryGeneratedColumn, ManyToOne, OneToOne} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
 import {ProductColorEntity} from "./product-color.entity"
 import {SizeEntity} from "../../size/entities/size.entity"
 
-@Entity("product_sizes")
-export class ProductSizeEntity {
+@Entity("product_color_sizes")
+export class ProductColorSizeEntity {
     @ApiProperty({
         example: 1,
         description: "The id of the product size",
@@ -60,10 +53,14 @@ export class ProductSizeEntity {
     @Column({type: "int"})
     min_qty: number
 
+    @ApiProperty({
+        type: ProductColorEntity
+    })
     @ManyToOne(() => ProductColorEntity, (productColor) => productColor.sizes)
     @JoinColumn({name: "product_color_id"})
     productColor: ProductColorEntity
 
+    @ApiProperty()
     @OneToOne(() => SizeEntity)
     @JoinColumn({name: "size_id"})
     size: SizeEntity

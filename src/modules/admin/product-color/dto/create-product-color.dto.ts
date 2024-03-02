@@ -1,12 +1,4 @@
-import {
-    IsArray,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsPositive,
-    IsString,
-    ValidateNested
-} from "class-validator"
+import {IsArray, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, ValidateNested} from "class-validator"
 import {ApiProperty} from "@nestjs/swagger"
 import {Type} from "class-transformer"
 
@@ -47,6 +39,40 @@ export class ProductSizeDto {
         required: true
     })
     min_qty: number
+}
+
+export class ProductImageDto {
+    @IsString()
+    @ApiProperty({
+        example: "Product color image name",
+        description: "The name of the product_color_image"
+    })
+    name: string
+
+    @IsString()
+    @ApiProperty({
+        example: "Product color image path",
+        description: "The path of the product_color_image"
+    })
+    path: string
+
+    @IsNumber()
+    @IsPositive()
+    @ApiProperty({
+        example: 4096,
+        description: "The size of the product_color_image"
+    })
+    size: number
+
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    @ApiProperty({
+        example: 1,
+        description: "The position of the product_color_image",
+        required: true
+    })
+    position: number
 }
 
 export class CreateProductColorDto {
@@ -99,4 +125,15 @@ export class CreateProductColorDto {
         required: true
     })
     product_sizes: ProductSizeDto[]
+
+    @IsArray()
+    @ValidateNested({each: true})
+    @Type(() => ProductImageDto)
+    @IsNotEmpty()
+    @ApiProperty({
+        type: [ProductImageDto],
+        description: "The product_images of the product color",
+        required: true
+    })
+    product_images: ProductImageDto[]
 }

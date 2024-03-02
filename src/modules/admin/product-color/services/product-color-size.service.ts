@@ -1,19 +1,18 @@
 import {Injectable} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
-import {ProductSizeEntity} from "../entities/product-size.entity"
+import {ProductColorSizeEntity} from "../entities/product-color-size.entity"
 import {CreateProductSizeDto} from "../dto/create-product-size.dto"
 
 @Injectable()
-export class ProductSizeService {
+export class ProductColorSizeService {
     constructor(
-        @InjectRepository(ProductSizeEntity)
-        private readonly productSizeRepository: Repository<ProductSizeEntity>
+        @InjectRepository(ProductColorSizeEntity)
+        private readonly productSizeRepository: Repository<ProductColorSizeEntity>
     ) {}
 
     async create(createProductSizeDto: CreateProductSizeDto) {
-        const productSize =
-            this.productSizeRepository.create(createProductSizeDto)
+        const productSize = this.productSizeRepository.create(createProductSizeDto)
         // Save product size
         await this.productSizeRepository.save(productSize)
 
