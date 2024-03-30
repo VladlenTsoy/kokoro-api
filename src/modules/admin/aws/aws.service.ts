@@ -43,6 +43,13 @@ export class AwsService {
         return this.aws.upload(params).promise()
     }
 
+    async getFile(key: string) {
+        return this.aws.getObject({
+            Bucket: this.configService.get("AWS_BUCKET_NANE"),
+            Key: key
+        }).promise()
+    }
+
     async moveFile(keyFrom: string, keyTo: string) {
         // Copy file
         await this.aws
@@ -60,25 +67,9 @@ export class AwsService {
     }
 
     async deleteFile(key: string) {
-        const params = {
+        return this.aws.deleteObject({
             Bucket: this.configService.get("AWS_BUCKET_NANE"),
             Key: key
-        }
-
-        // Check image
-        try {
-            await this.aws.headObject(params).promise()
-        } catch (e) {
-            if (e?.code === "NotFound") throw new NotFoundException("Image not found")
-            throw new InternalServerErrorException("Error loading image")
-        }
-
-        // Delete image
-        try {
-            await this.aws.deleteObject(params).promise()
-            return {statusCode: 200, code: "Success"}
-        } catch (e) {
-            throw new InternalServerErrorException("Error loading image")
-        }
+        }).promise()
     }
 }
