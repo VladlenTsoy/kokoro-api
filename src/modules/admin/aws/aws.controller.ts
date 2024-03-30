@@ -1,6 +1,7 @@
 import {
     Body,
-    Controller, InternalServerErrorException,
+    Controller,
+    InternalServerErrorException,
     NotFoundException,
     Post,
     UploadedFile,
@@ -17,8 +18,7 @@ import {ApiBearerAuth, ApiBody, ApiOperation, ApiTags} from "@nestjs/swagger"
 @ApiTags("Images")
 @Controller("admin/image")
 export class AwsController {
-    constructor(private readonly awsService: AwsService) {
-    }
+    constructor(private readonly awsService: AwsService) {}
 
     @Post("upload")
     @ApiOperation({summary: "Upload image"})

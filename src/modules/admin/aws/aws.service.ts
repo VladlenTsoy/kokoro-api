@@ -1,4 +1,4 @@
-import {Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common"
+import {Injectable} from "@nestjs/common"
 import * as AWS from "aws-sdk"
 import {ConfigService} from "@nestjs/config"
 import * as sharp from "sharp"
