@@ -44,10 +44,11 @@ export class AwsService {
     }
 
     async getFile(key: string) {
-        return this.aws.getObject({
-            Bucket: this.configService.get("AWS_BUCKET_NANE"),
-            Key: key
-        }).promise()
+        return this.aws
+            .getObject({
+                Bucket: this.configService.get("AWS_BUCKET_NANE"),
+                Key: key
+            }).promise()
     }
 
     async moveFile(keyFrom: string, keyTo: string) {
@@ -67,9 +68,10 @@ export class AwsService {
     }
 
     async deleteFile(key: string) {
-        return this.aws.deleteObject({
-            Bucket: this.configService.get("AWS_BUCKET_NANE"),
-            Key: key
-        }).promise()
+        return this.aws
+            .deleteObject({
+                Bucket: this.configService.get("AWS_BUCKET_NANE"),
+                Key: key
+            }).promise()
     }
 }
