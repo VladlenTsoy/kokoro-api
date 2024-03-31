@@ -61,7 +61,7 @@ export class ProductColorSizeEntity {
     productColor: ProductColorEntity
 
     @ApiProperty()
-    @OneToOne(() => SizeEntity)
+    @ManyToOne(() => SizeEntity)
     @JoinColumn({name: "size_id"})
     size: SizeEntity
 }

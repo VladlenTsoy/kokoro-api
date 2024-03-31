@@ -7,6 +7,7 @@ import {ProductColorEntity} from "../entities/product-color.entity"
 import {ProductService} from "./product.service"
 import {ProductColorSizeService} from "./product-color-size.service"
 import {ProductColorImageService} from "./product-color-image.service"
+import {AwsService} from "../../aws/aws.service"
 
 @Injectable()
 export class ProductColorService {
@@ -15,8 +16,10 @@ export class ProductColorService {
         private readonly productColorRepository: Repository<ProductColorEntity>,
         private readonly productService: ProductService,
         private readonly productSizeService: ProductColorSizeService,
-        private readonly productColorImageService: ProductColorImageService
-    ) {}
+        private readonly productColorImageService: ProductColorImageService,
+        private readonly awsService: AwsService
+    ) {
+    }
 
     async create(createProductColorDto: CreateProductColorDto) {
         // Select product id
@@ -48,12 +51,22 @@ export class ProductColorService {
             })
         )
 
-        // Create product images
+        // Move images and Create product images
         if (createProductColorDto.product_images && createProductColorDto.product_images.length) {
-            await Promise.all(
+            // Move images from tmp folder
+            const images = await Promise.all(
                 createProductColorDto.product_images.map(async (productImage) => {
+                    const newPath = `kokoro/${productColor.id}/${productImage.name}`
+                    await this.awsService.moveFile(productImage.path, newPath)
+
+                    return {...productImage, path: newPath}
+                })
+            )
+            //Create product image
+            await Promise.all(
+                images.map(async (image) => {
                     await this.productColorImageService.create({
-                        ...productImage,
+                        ...image,
                         product_color_id: productColor.id
                     })
                 })
@@ -87,5 +100,9 @@ export class ProductColorService {
 
     update(id: number, updateProductColorDto: UpdateProductColorDto) {
         return `This action updates a #${id} productColor`
+    }
+
+    remove(id: number) {
+
     }
 }

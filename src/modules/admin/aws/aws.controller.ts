@@ -33,7 +33,7 @@ export class AwsController {
         const image = await this.awsService.getFile(uploadedImage.Key)
         const sizeKilobytes = image.ContentLength ? Math.ceil(image.ContentLength / 1000) : 0
 
-        return {size: sizeKilobytes, key: uploadedImage.Key}
+        return {size: sizeKilobytes, key: uploadedImage.Key, name: uploadedImage.name}
     }
 
     @Post("delete")
