@@ -48,6 +48,6 @@ export class ProductColorController {
 
     @Delete(":id")
     remove(@Param("id") id: string) {
-        // return this.productColorService.remove(+id)
+        return this.productColorService.remove(+id)
     }
 }

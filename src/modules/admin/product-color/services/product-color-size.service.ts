@@ -9,7 +9,8 @@ export class ProductColorSizeService {
     constructor(
         @InjectRepository(ProductColorSizeEntity)
         private readonly productSizeRepository: Repository<ProductColorSizeEntity>
-    ) {}
+    ) {
+    }
 
     async create(createProductSizeDto: CreateProductSizeDto) {
         const productSize = this.productSizeRepository.create(createProductSizeDto)
@@ -17,5 +18,9 @@ export class ProductColorSizeService {
         await this.productSizeRepository.save(productSize)
 
         return productSize
+    }
+
+    async removeByProductColorId(productColorId: number) {
+        await this.productSizeRepository.delete({product_color_id: productColorId})
     }
 }

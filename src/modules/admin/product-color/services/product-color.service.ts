@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common"
+import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductColorDto} from "../dto/create-product-color.dto"
 import {UpdateProductColorDto} from "../dto/update-product-color.dto"
 import {InjectRepository} from "@nestjs/typeorm"
@@ -102,7 +102,12 @@ export class ProductColorService {
         return `This action updates a #${id} productColor`
     }
 
-    remove(id: number) {
-
+    async remove(id: number) {
+        const productColor = await this.productColorRepository.findOneBy({id})
+        if (!productColor) throw new NotFoundException("The product color was not found")
+        await this.productSizeService.removeByProductColorId(id)
+        await this.productColorImageService.removeByProductColorId(id)
+        await this.productColorRepository.delete(id)
+        return {message: "Product color has been successfully removed"}
     }
 }

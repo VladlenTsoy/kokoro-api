@@ -84,6 +84,7 @@ export class AwsService {
             .deleteObject({
                 Bucket: this.configService.get("AWS_BUCKET_NANE"),
                 Key: key
-            }).promise()
+            })
+            .promise()
     }
 }
