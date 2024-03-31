@@ -1,5 +1,6 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
+import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
+import {ProductColorEntity} from "./product-color.entity"
 
 @Entity("product_color_images")
 export class ProductColorImageEntity {
@@ -47,4 +48,18 @@ export class ProductColorImageEntity {
     })
     @Column({type: "int"})
     position: number
+
+    @ApiProperty({
+        type: ProductColorEntity
+    })
+    @ManyToOne(() => ProductColorEntity, (productColor) => productColor.images)
+    @JoinColumn({name: "product_color_id"})
+    productColor: ProductColorEntity
+
+    @Column({select: false})
+    url: string
+
+    getUrl(): string {
+        return `https://insidebysana.sfo3.digitaloceanspaces.com/${this.path}`
+    }
 }

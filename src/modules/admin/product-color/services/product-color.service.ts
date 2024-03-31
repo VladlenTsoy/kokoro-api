@@ -18,8 +18,7 @@ export class ProductColorService {
         private readonly productSizeService: ProductColorSizeService,
         private readonly productColorImageService: ProductColorImageService,
         private readonly awsService: AwsService
-    ) {
-    }
+    ) {}
 
     async create(createProductColorDto: CreateProductColorDto) {
         // Select product id
@@ -81,6 +80,7 @@ export class ProductColorService {
             .createQueryBuilder("productColor")
             .leftJoinAndSelect("productColor.color", "color")
             .leftJoinAndSelect("productColor.sizes", "sizes")
+            .leftJoin("productColor.images", "images")
             .leftJoinAndSelect("sizes.size", "size")
             .select([
                 "productColor.id",
@@ -89,7 +89,10 @@ export class ProductColorService {
                 "color.title",
                 "color.hex",
                 "sizes.qty",
-                "size.title"
+                "size.title",
+                "images.id",
+                "images.path",
+                "images.position"
             ])
             .getMany()
     }
