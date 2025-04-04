@@ -8,7 +8,7 @@ services:
       - MYSQL_ROOT_PASSWORD=$DB_PASSWORD
       - MYSQL_DATABASE=$DB_NAME
     ports:
-      - $DB_PORT:3306
+      - $DB_PORT:9030
     volumes:
       - db:/var/lib/mysql
 
@@ -23,6 +23,7 @@ services:
       - $PHPMYADMIN_PORT:80
     environment:
       - PMA_ARBITRARY=0
+      - UPLOAD_LIMIT=150M
 
 volumes:
   db:

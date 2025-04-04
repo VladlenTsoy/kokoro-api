@@ -49,17 +49,16 @@ export class ProductColorImageEntity {
     @Column({type: "int"})
     position: number
 
+    // @ApiProperty({readOnly: true})
+    // @Column({select: false})
+    get url(): string {
+        return `https://insidebysana.sfo3.digitaloceanspaces.com/${this.path}`
+    }
+
     @ApiProperty({
         type: ProductColorEntity
     })
     @ManyToOne(() => ProductColorEntity, (productColor) => productColor.images)
     @JoinColumn({name: "product_color_id"})
     productColor: ProductColorEntity
-
-    @Column({select: false})
-    url: string
-
-    getUrl(): string {
-        return `https://insidebysana.sfo3.digitaloceanspaces.com/${this.path}`
-    }
 }

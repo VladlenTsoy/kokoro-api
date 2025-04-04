@@ -1,6 +1,5 @@
 import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductColorDto} from "../dto/create-product-color.dto"
-import {UpdateProductColorDto} from "../dto/update-product-color.dto"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {ProductColorEntity} from "../entities/product-color.entity"
@@ -75,12 +74,12 @@ export class ProductColorService {
         return productColor
     }
 
-    findAll() {
+    findAll(params: {page: number; pageSize: number}) {
         return this.productColorRepository
             .createQueryBuilder("productColor")
             .leftJoinAndSelect("productColor.color", "color")
             .leftJoinAndSelect("productColor.sizes", "sizes")
-            .leftJoin("productColor.images", "images")
+            .leftJoinAndSelect("productColor.images", "images")
             .leftJoinAndSelect("sizes.size", "size")
             .select([
                 "productColor.id",
@@ -91,9 +90,11 @@ export class ProductColorService {
                 "sizes.qty",
                 "size.title",
                 "images.id",
-                "images.path",
+                // "images.path",
                 "images.position"
             ])
+            .skip((params.page - 1) * params.pageSize)
+            .take(params.pageSize)
             .getMany()
     }
 
@@ -101,7 +102,7 @@ export class ProductColorService {
         return `This action returns a #${id} productColor`
     }
 
-    update(id: number, updateProductColorDto: UpdateProductColorDto) {
+    update(id: number) {
         return `This action updates a #${id} productColor`
     }
 
