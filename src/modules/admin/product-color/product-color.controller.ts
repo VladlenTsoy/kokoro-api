@@ -1,9 +1,10 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe, Req} from "@nestjs/common"
 import {ProductColorService} from "./services/product-color.service"
 import {CreateProductColorDto} from "./dto/create-product-color.dto"
 import {UpdateProductColorDto} from "./dto/update-product-color.dto"
 import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {ProductColorEntity} from "./entities/product-color.entity"
+import {Request} from "express"
 
 @ApiBearerAuth()
 @ApiTags("Product Colors")
@@ -32,8 +33,9 @@ export class ProductColorController {
         type: ProductColorEntity,
         isArray: true
     })
-    findAll() {
-        return this.productColorService.findAll()
+    findAll(@Req() req: Request) {
+        console.log(req.query)
+        return this.productColorService.findAll(req.query as unknown as {page: number; pageSize: number})
     }
 
     @Get(":id")
@@ -48,6 +50,6 @@ export class ProductColorController {
 
     @Delete(":id")
     remove(@Param("id") id: string) {
-        // return this.productColorService.remove(+id)
+        return this.productColorService.remove(+id)
     }
 }

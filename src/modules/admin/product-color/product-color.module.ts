@@ -9,12 +9,14 @@ import {ProductColorSizeEntity} from "./entities/product-color-size.entity"
 import {ProductColorSizeService} from "./services/product-color-size.service"
 import {ProductColorImageService} from "./services/product-color-image.service"
 import {ProductColorImageEntity} from "./entities/product-color-image.entity"
+import {AwsService} from "../aws/aws.service"
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([ProductEntity, ProductColorEntity, ProductColorSizeEntity, ProductColorImageEntity])
     ],
     controllers: [ProductColorController],
-    providers: [ProductColorService, ProductService, ProductColorSizeService, ProductColorImageService]
+    providers: [ProductColorService, ProductService, ProductColorSizeService, ProductColorImageService, AwsService]
 })
-export class ProductColorModule {}
+export class ProductColorModule {
+}

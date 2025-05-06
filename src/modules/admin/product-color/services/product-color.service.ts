@@ -1,12 +1,12 @@
-import {Injectable} from "@nestjs/common"
+import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductColorDto} from "../dto/create-product-color.dto"
-import {UpdateProductColorDto} from "../dto/update-product-color.dto"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {ProductColorEntity} from "../entities/product-color.entity"
 import {ProductService} from "./product.service"
 import {ProductColorSizeService} from "./product-color-size.service"
 import {ProductColorImageService} from "./product-color-image.service"
+import {AwsService} from "../../aws/aws.service"
 
 @Injectable()
 export class ProductColorService {
@@ -15,7 +15,8 @@ export class ProductColorService {
         private readonly productColorRepository: Repository<ProductColorEntity>,
         private readonly productService: ProductService,
         private readonly productSizeService: ProductColorSizeService,
-        private readonly productColorImageService: ProductColorImageService
+        private readonly productColorImageService: ProductColorImageService,
+        private readonly awsService: AwsService
     ) {}
 
     async create(createProductColorDto: CreateProductColorDto) {
@@ -48,12 +49,22 @@ export class ProductColorService {
             })
         )
 
-        // Create product images
+        // Move images and Create product images
         if (createProductColorDto.product_images && createProductColorDto.product_images.length) {
-            await Promise.all(
+            // Move images from tmp folder
+            const images = await Promise.all(
                 createProductColorDto.product_images.map(async (productImage) => {
+                    const newPath = `kokoro/${productColor.id}/${productImage.name}`
+                    await this.awsService.moveFile(productImage.path, newPath)
+
+                    return {...productImage, path: newPath}
+                })
+            )
+            //Create product image
+            await Promise.all(
+                images.map(async (image) => {
                     await this.productColorImageService.create({
-                        ...productImage,
+                        ...image,
                         product_color_id: productColor.id
                     })
                 })
@@ -63,11 +74,12 @@ export class ProductColorService {
         return productColor
     }
 
-    findAll() {
+    findAll(params: {page: number; pageSize: number}) {
         return this.productColorRepository
             .createQueryBuilder("productColor")
             .leftJoinAndSelect("productColor.color", "color")
             .leftJoinAndSelect("productColor.sizes", "sizes")
+            .leftJoinAndSelect("productColor.images", "images")
             .leftJoinAndSelect("sizes.size", "size")
             .select([
                 "productColor.id",
@@ -76,8 +88,13 @@ export class ProductColorService {
                 "color.title",
                 "color.hex",
                 "sizes.qty",
-                "size.title"
+                "size.title",
+                "images.id",
+                // "images.path",
+                "images.position"
             ])
+            .skip((params.page - 1) * params.pageSize)
+            .take(params.pageSize)
             .getMany()
     }
 
@@ -85,7 +102,16 @@ export class ProductColorService {
         return `This action returns a #${id} productColor`
     }
 
-    update(id: number, updateProductColorDto: UpdateProductColorDto) {
+    update(id: number) {
         return `This action updates a #${id} productColor`
+    }
+
+    async remove(id: number) {
+        const productColor = await this.productColorRepository.findOneBy({id})
+        if (!productColor) throw new NotFoundException("The product color was not found")
+        await this.productSizeService.removeByProductColorId(id)
+        await this.productColorImageService.removeByProductColorId(id)
+        await this.productColorRepository.delete(id)
+        return {message: "Product color has been successfully removed"}
     }
 }
