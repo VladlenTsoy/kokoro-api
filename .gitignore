@@ -37,5 +37,4 @@ lerna-debug.log*
 
 #
 .env
-ormconfig.ts
 ormconfig.json
