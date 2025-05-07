@@ -7,6 +7,7 @@ import {ProductService} from "./product.service"
 import {ProductColorSizeService} from "./product-color-size.service"
 import {ProductColorImageService} from "./product-color-image.service"
 import {AwsService} from "../../aws/aws.service"
+import {UpdateProductColorDto} from "../dto/update-product-color.dto"
 
 @Injectable()
 export class ProductColorService {
@@ -102,7 +103,8 @@ export class ProductColorService {
         return `This action returns a #${id} productColor`
     }
 
-    update(id: number) {
+    update(id: number, updateProductColorDto: UpdateProductColorDto) {
+        console.log(updateProductColorDto)
         return `This action updates a #${id} productColor`
     }
 

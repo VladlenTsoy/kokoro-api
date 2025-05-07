@@ -1,24 +1,33 @@
 import {Injectable} from "@nestjs/common"
-import * as AWS from "aws-sdk"
 import {ConfigService} from "@nestjs/config"
+import {CopyObjectCommand, DeleteObjectCommand, GetObjectCommand, S3Client} from "@aws-sdk/client-s3"
+import {Upload} from "@aws-sdk/lib-storage"
 import * as sharp from "sharp"
-import {ManagedUpload} from "aws-sdk/lib/s3/managed_upload"
-import SendData = ManagedUpload.SendData
+import {Readable} from "stream"
 
 @Injectable()
 export class AwsService {
-    private aws: AWS.S3
+    private s3: S3Client
 
     constructor(private configService: ConfigService) {
-        this.aws = new AWS.S3({
-            endpoint: configService.get("AWS_ENDPOINT"),
-            credentials: new AWS.Credentials(
-                configService.get("AWS_ACCESS_KEY_ID"),
-                configService.get("AWS_SECRET_ACCESS_KEY")
-            )
+        this.s3 = new S3Client({
+            endpoint: configService.get<string>("AWS_ENDPOINT"),
+            region: configService.get<string>("AWS_REGION"),
+            credentials: {
+                accessKeyId: configService.get<string>("AWS_ACCESS_KEY_ID"),
+                secretAccessKey: configService.get<string>("AWS_SECRET_ACCESS_KEY")
+            },
+            forcePathStyle: true // важно, если используешь S3-совместимые хранилища типа MinIO
         })
     }
 
+    /**
+     * Загрузка файла
+     * @param file
+     * @param filePath
+     * @param quality
+     * @param width
+     */
     async uploadFile(
         file: Express.Multer.File,
         {
@@ -30,61 +39,84 @@ export class AwsService {
             quality?: number
             width?: number
         }
-    ): Promise<SendData & {name?: string}> {
-        const imageBuffer = await sharp(file.buffer).webp({quality}).resize(width).toBuffer()
+    ): Promise<{Key: string; name: string; Location: string}> {
         const ext = "webp"
-        const filename = Date.now() + "-" + Math.round(Math.random() * 1e9)
-        // Params for bucket
-        const params = {
-            Bucket: this.configService.get("AWS_BUCKET_NANE"),
-            Key: `${this.configService.get("AWS_ROOT_PATH")}/${filePath}/${filename}.${ext}`,
-            Body: imageBuffer,
-            ACL: "public-read"
-        }
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`
+        const key = `${this.configService.get("AWS_ROOT_PATH")}/${filePath}/${filename}`
 
-        const uploaded = await this.aws.upload(params).promise()
-        return {...uploaded, name: `${filename}.${ext}`}
-    }
+        const imageBuffer = await sharp(file.buffer).webp({quality}).resize(width).toBuffer()
+        const stream = Readable.from(imageBuffer)
 
-    async getFile(key: string) {
-        return this.aws
-            .getObject({
-                Bucket: this.configService.get("AWS_BUCKET_NANE"),
-                Key: key
-            }).promise()
-    }
-
-    // TODO check and update
-    async moveFile(keyFrom: string, keyTo: string) {
-        // Copy file
-        try {
-            const copyResult = await this.aws
-                .copyObject({
-                    Bucket: this.configService.get("AWS_BUCKET_NANE"),
-                    CopySource: this.configService.get("AWS_BUCKET_NANE") + "/" + keyFrom,
-                    Key: keyTo
-                })
-                .promise()
-
-            if (copyResult.CopyObjectResult) {
-                // Delete file
-                await this.aws.deleteObject({
-                    Bucket: this.configService.get("AWS_BUCKET_NANE"),
-                    Key: keyFrom
-                }).promise()
+        const upload = new Upload({
+            client: this.s3,
+            params: {
+                Bucket: this.configService.get<string>("AWS_BUCKET_NANE"),
+                Key: key,
+                Body: stream,
+                ACL: "public-read",
+                ContentType: "image/webp"
             }
-        } catch (e) {
-            if (e.code === "NoSuchKey") console.log({code: e.code, keyFrom, keyTo})
-            console.log(e)
+        })
+
+        const result = await upload.done()
+        return {
+            Key: result.Key!,
+            name: filename,
+            Location: result.Location!
         }
     }
 
-    async deleteFile(key: string) {
-        return this.aws
-            .deleteObject({
-                Bucket: this.configService.get("AWS_BUCKET_NANE"),
-                Key: key
+    /**
+     * Получения файла
+     * @param key
+     */
+    async getFile(key: string) {
+        const command = new GetObjectCommand({
+            Bucket: this.configService.get<string>("AWS_BUCKET_NANE"),
+            Key: key
+        })
+        return this.s3.send(command)
+    }
+
+    /**
+     * Переместить файл
+     * @param keyFrom
+     * @param keyTo
+     */
+    async moveFile(keyFrom: string, keyTo: string) {
+        const bucket = this.configService.get<string>("AWS_BUCKET_NANE")
+
+        try {
+            const copyCommand = new CopyObjectCommand({
+                Bucket: bucket,
+                CopySource: `${bucket}/${keyFrom}`,
+                Key: keyTo
             })
-            .promise()
+            await this.s3.send(copyCommand)
+
+            const deleteCommand = new DeleteObjectCommand({
+                Bucket: bucket,
+                Key: keyFrom
+            })
+            await this.s3.send(deleteCommand)
+        } catch (e) {
+            if (e.name === "NoSuchKey") {
+                console.error({code: e.name, keyFrom, keyTo})
+            } else {
+                console.error(e)
+            }
+        }
+    }
+
+    /**
+     * Удаление файла
+     * @param key
+     */
+    async deleteFile(key: string) {
+        const command = new DeleteObjectCommand({
+            Bucket: this.configService.get<string>("AWS_BUCKET_NANE"),
+            Key: key
+        })
+        return this.s3.send(command)
     }
 }

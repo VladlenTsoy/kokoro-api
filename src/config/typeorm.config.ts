@@ -1,18 +1,25 @@
 import {ConfigModule, ConfigService} from "@nestjs/config"
 import {TypeOrmModuleAsyncOptions} from "@nestjs/typeorm/dist/interfaces/typeorm-options.interface"
 
-export const ConfigFunctionTypeORM = {
+export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     imports: [ConfigModule],
     inject: [ConfigService],
-    useFactory: (configService: ConfigService) => ({
+    useFactory: async (configService: ConfigService) => ({
         type: "mysql",
-        host: configService.get<string>("DB_HOST"),
-        port: Number(configService.get<string>("DB_PORT")),
-        username: configService.get<string>("DB_USERNAME"),
-        password: configService.get<string>("DB_PASSWORD"),
-        database: configService.get<string>("DB_DATABASE"),
-        synchronize: configService.get<string>("APP_MODE") === "development",
+        host: configService.get<string>("DB_HOST", "localhost"),
+        port: configService.get<number>("DB_PORT", 3306),
+        username: configService.get<string>("DB_USERNAME", "root"),
+        password: configService.get<string>("DB_PASSWORD", "root"),
+        database: configService.get<string>("DB_DATABASE", "crm"),
+        entities: [__dirname + "/../**/*.entity{.ts,.js}"],
+        migrations: [__dirname + "/../migrations/*{.ts,.js}"],
+        synchronize: false,
+        logging: configService.get<string>("APP_MODE") === "development",
         migrationsTableName: "migrations",
-        migrations: ["./src/migrations/*.ts"]
+        migrationsRun: configService.get<string>("APP_MODE") !== "development",
+        extra: {
+            charset: "utf8mb4_unicode_ci"
+        },
+        autoLoadEntities: true
     })
-} as TypeOrmModuleAsyncOptions
+}
