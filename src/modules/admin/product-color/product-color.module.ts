@@ -18,5 +18,4 @@ import {AwsService} from "../aws/aws.service"
     controllers: [ProductColorController],
     providers: [ProductColorService, ProductService, ProductColorSizeService, ProductColorImageService, AwsService]
 })
-export class ProductColorModule {
-}
+export class ProductColorModule {}

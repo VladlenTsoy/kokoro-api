@@ -6,7 +6,7 @@ import {AppService} from "../../app.service"
 import {AwsModule} from "./aws/aws.module"
 import {ProductPropertyModule} from "./product-property/product-property.module"
 import {ProductCategoryModule} from "./product-category/product-category.module"
-import { ProductColorTagModule } from './product-color-tag/product-color-tag.module';
+import {ProductColorTagModule} from "./product-color-tag/product-color-tag.module"
 
 @Module({
     imports: [
