@@ -11,8 +11,7 @@ export class ProductColorImageService {
         @InjectRepository(ProductColorImageEntity)
         private readonly productColorImageRepository: Repository<ProductColorImageEntity>,
         private readonly awsService: AwsService
-    ) {
-    }
+    ) {}
 
     async create(createProductColorImageDto: CreateProductColorImageDto) {
         // Create product color image
@@ -30,7 +29,7 @@ export class ProductColorImageService {
 
     async removeByProductColorId(productColorId: number) {
         const productColorImage = await this.productColorImageRepository.findOneBy({product_color_id: productColorId})
-        productColorImage?.path && await this.awsService.deleteFile(productColorImage.path)
+        if (productColorImage?.path) await this.awsService.deleteFile(productColorImage.path)
         await this.productColorImageRepository.delete(productColorImage.id)
     }
 }

@@ -4,9 +4,19 @@ import {SizeModule} from "./size/size.module"
 import {ColorModule} from "./color/color.module"
 import {AppService} from "../../app.service"
 import {AwsModule} from "./aws/aws.module"
+import {ProductPropertyModule} from "./product-property/product-property.module"
+import {ProductCategoryModule} from "./product-category/product-category.module"
 
 @Module({
-    imports: [ProductColorModule, ColorModule, SizeModule, AwsModule],
+    imports: [
+        ProductColorModule,
+        ColorModule,
+        SizeModule,
+        AwsModule,
+        ProductPropertyModule,
+        ProductCategoryModule,
+        ProductPropertyModule
+    ],
     providers: [AppService]
 })
 export class AdminModule {}

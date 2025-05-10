@@ -1,24 +1,8 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    UsePipes,
-    ValidationPipe
-} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
 import {ColorService} from "./color.service"
 import {CreateColorDto} from "./dto/create-color.dto"
 import {UpdateColorDto} from "./dto/update-color.dto"
-import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOperation,
-    ApiResponse,
-    ApiTags
-} from "@nestjs/swagger"
+import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {ColorEntity} from "./entities/color.entity"
 
 @ApiBearerAuth()
