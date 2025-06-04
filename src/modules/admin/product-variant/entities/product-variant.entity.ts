@@ -1,9 +1,20 @@
 import {ApiProperty} from "@nestjs/swagger"
-import {Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm"
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    JoinTable
+} from "typeorm"
 import {ColorEntity} from "../../color/entities/color.entity"
 import {ProductVariantSizeEntity} from "../../product-variant-size/entities/product-variant-size.entity"
 import {ProductVariantImageEntity} from "../../product-variant-image/entities/product-variant-image.entity"
 import {ProductEntity} from "../../product/entities/product.entity"
+import {ProductTagEntity} from "../../product-tag/entities/product-tag.entity"
 
 @Entity("product_variants")
 export class ProductVariantEntity {
@@ -76,4 +87,18 @@ export class ProductVariantEntity {
     })
     @OneToMany(() => ProductVariantImageEntity, (image) => image.productVariant)
     images: ProductVariantImageEntity[]
+
+    @ManyToMany(() => ProductTagEntity)
+    @JoinTable({
+        name: "product_tag_assignments",
+        joinColumn: {
+            name: "product_variant_id",
+            referencedColumnName: "id"
+        },
+        inverseJoinColumn: {
+            name: "tag_id",
+            referencedColumnName: "id"
+        }
+    })
+    tags: ProductTagEntity[]
 }

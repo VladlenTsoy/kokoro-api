@@ -1,5 +1,6 @@
 import {ApiProperty} from "@nestjs/swagger"
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
+import {Column, Entity, ManyToMany, PrimaryGeneratedColumn} from "typeorm"
+import {ProductVariantEntity} from "../../product-variant/entities/product-variant.entity"
 
 @Entity("product_tags")
 export class ProductTagEntity {
@@ -18,4 +19,7 @@ export class ProductTagEntity {
     })
     @Column({type: "varchar", length: 20})
     title: string
+
+    @ManyToMany(() => ProductVariantEntity, (variant) => variant.tags)
+    variants: ProductVariantEntity[]
 }

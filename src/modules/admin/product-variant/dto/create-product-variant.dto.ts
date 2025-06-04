@@ -146,4 +146,9 @@ export class CreateProductVariantDto {
         required: true
     })
     product_images: ProductImageDto[]
+
+    @ApiProperty({type: [Number], description: "List id tags"})
+    @IsOptional()
+    @IsArray()
+    tags?: number[]
 }
