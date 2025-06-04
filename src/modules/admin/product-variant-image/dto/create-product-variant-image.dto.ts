@@ -7,22 +7,22 @@ export class CreateProductVariantImageDto {
     @IsPositive()
     @ApiProperty({
         example: 1,
-        description: "The product_color_id of the product_color_image",
+        description: "The product_variant_id of the product_variant_image",
         required: true
     })
-    product_color_id: number
+    product_variant_id: number
 
     @IsString()
     @ApiProperty({
-        example: "Product color image name",
-        description: "The name of the product_color_image"
+        example: "Product variant image name",
+        description: "The name of the product_variant_image"
     })
     name: string
 
     @IsString()
     @ApiProperty({
-        example: "Product color image path",
-        description: "The path of the product_color_image"
+        example: "Product variant image path",
+        description: "The path of the product_variant_image"
     })
     path: string
 
@@ -30,7 +30,7 @@ export class CreateProductVariantImageDto {
     @IsPositive()
     @ApiProperty({
         example: 4096,
-        description: "The size of the product_color_image"
+        description: "The size of the product_variant_image"
     })
     size: number
 
@@ -39,7 +39,7 @@ export class CreateProductVariantImageDto {
     @IsPositive()
     @ApiProperty({
         example: 1,
-        description: "The position of the product_color_image",
+        description: "The position of the product_variant_image",
         required: true
     })
     position: number

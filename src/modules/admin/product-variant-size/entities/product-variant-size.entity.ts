@@ -3,7 +3,7 @@ import {ApiProperty} from "@nestjs/swagger"
 import {ProductVariantEntity} from "../../product-variant/entities/product-variant.entity"
 import {SizeEntity} from "../../size/entities/size.entity"
 
-@Entity("product_color_sizes")
+@Entity("product_variant_sizes")
 export class ProductVariantSizeEntity {
     @ApiProperty({
         example: 1,
@@ -15,11 +15,11 @@ export class ProductVariantSizeEntity {
 
     @ApiProperty({
         example: 1,
-        description: "The product_color_id of the product size",
+        description: "The product_variant_id of the product size",
         required: true
     })
     @Column({type: "int"})
-    product_color_id: number
+    product_variant_id: number
 
     @ApiProperty({
         example: 1,
