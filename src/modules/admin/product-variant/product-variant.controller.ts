@@ -10,46 +10,45 @@ import {Request} from "express"
 @ApiTags("Product Variants")
 @Controller("admin/product-variant")
 export class ProductVariantController {
-    constructor(private readonly productColorService: ProductVariantService) {}
+    constructor(private readonly productVariantService: ProductVariantService) {}
 
     @Post()
-    @ApiOperation({summary: "Create product color"})
+    @ApiOperation({summary: "Create product variant"})
     @ApiBody({type: CreateProductVariantDto})
     @UsePipes(new ValidationPipe({transform: true}))
     @ApiResponse({
         status: 200,
-        description: "New product color created",
+        description: "New product variant created",
         type: ProductVariantEntity
     })
-    create(@Body() createProductColorDto: CreateProductVariantDto) {
-        return this.productColorService.create(createProductColorDto)
+    create(@Body() createProductVariantDto: CreateProductVariantDto) {
+        return this.productVariantService.create(createProductVariantDto)
     }
 
     @Get()
-    @ApiOperation({summary: "Get all product colors"})
+    @ApiOperation({summary: "Get all product variants"})
     @ApiResponse({
         status: 200,
-        description: "List of all product colors",
+        description: "List of all product variants",
         type: ProductVariantEntity,
         isArray: true
     })
     findAll(@Req() req: Request) {
-        console.log(req.query)
-        return this.productColorService.findAll(req.query as unknown as {page: number; pageSize: number})
+        return this.productVariantService.findAll(req.query as unknown as {page: number; pageSize: number})
     }
 
     @Get(":id")
     findOne(@Param("id") id: string) {
-        return this.productColorService.findOne(+id)
+        return this.productVariantService.findOne(+id)
     }
 
     @Patch(":id")
-    update(@Param("id") id: string, @Body() updateProductColorDto: UpdateProductVariantDto) {
-        return this.productColorService.update(+id, updateProductColorDto)
+    update(@Param("id") id: string, @Body() updateProductVariantDto: UpdateProductVariantDto) {
+        return this.productVariantService.update(+id, updateProductVariantDto)
     }
 
     @Delete(":id")
     remove(@Param("id") id: string) {
-        return this.productColorService.remove(+id)
+        return this.productVariantService.remove(+id)
     }
 }

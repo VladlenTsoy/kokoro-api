@@ -9,7 +9,7 @@ import {ProductEntity} from "../../product/entities/product.entity"
 export class ProductVariantEntity {
     @ApiProperty({
         example: 1,
-        description: "The id of the product color",
+        description: "The id of the product variant",
         required: true
     })
     @PrimaryGeneratedColumn()
@@ -17,7 +17,7 @@ export class ProductVariantEntity {
 
     @ApiProperty({
         example: "Title",
-        description: "The title of the product color",
+        description: "The title of the product variant",
         required: true
     })
     @Column({type: "varchar", length: 50})
@@ -25,7 +25,7 @@ export class ProductVariantEntity {
 
     @ApiProperty({
         example: 50000,
-        description: "The price of the product color",
+        description: "The price of the product variant",
         required: true
     })
     @Column({type: "int"})
@@ -33,7 +33,7 @@ export class ProductVariantEntity {
 
     @ApiProperty({
         example: 1,
-        description: "The product_id of the product color",
+        description: "The product_id of the product variant",
         required: true
     })
     @Column({type: "int"})
@@ -41,7 +41,7 @@ export class ProductVariantEntity {
 
     @ApiProperty({
         example: 1,
-        description: "The color_id of the product color",
+        description: "The color_id of the product variant",
         required: true
     })
     @Column({type: "int"})
@@ -49,7 +49,7 @@ export class ProductVariantEntity {
 
     @ApiProperty({
         example: "2023-12-16T11:21:52.000Z",
-        description: "The created at of the product color",
+        description: "The created at of the product variant",
         required: true
     })
     @CreateDateColumn({type: "timestamp"})
@@ -66,13 +66,13 @@ export class ProductVariantEntity {
     product: ProductEntity
 
     @ApiProperty({
-        type: [ProductVariantEntity]
+        type: () => [ProductVariantSizeEntity]
     })
     @OneToMany(() => ProductVariantSizeEntity, (size) => size.productVariant)
     sizes: ProductVariantSizeEntity[]
 
     @ApiProperty({
-        type: [ProductVariantEntity]
+        type: () => [ProductVariantImageEntity]
     })
     @OneToMany(() => ProductVariantImageEntity, (image) => image.productVariant)
     images: ProductVariantImageEntity[]

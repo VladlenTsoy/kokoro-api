@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing"
 import {ProductVariantService} from "./product-variant.service"
 
-describe("ProductColorService", () => {
+describe("ProductVariantService", () => {
     let service: ProductVariantService
 
     beforeEach(async () => {

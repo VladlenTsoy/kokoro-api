@@ -31,7 +31,7 @@ npm install
 Создайте .env файл на основе .env.example и заполните необходимые переменные среды.
 
 ```bash
-APP_MODE="delvelopment"
+APP_MODE="development"
 # Database
 DB_HOST="localhost"
 DB_PORT=3306
@@ -42,10 +42,11 @@ DB_NAME="database"
 PHPMYADMIN_PORT=9000
 # AWS
 AWS_ENDPOINT=
-AWS_ENDPOINT=
-AWS_BUCKET_NANE=
+AWS_REGION=
+AWS_BUCKET_NAME=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
+AWS_ROOT_PATH=
 ```
 
 ### Запуск Docker Контейнеров
