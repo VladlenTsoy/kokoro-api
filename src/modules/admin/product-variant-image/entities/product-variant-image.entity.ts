@@ -60,5 +60,5 @@ export class ProductVariantImageEntity {
     })
     @ManyToOne(() => ProductVariantEntity, (productColor) => productColor.images)
     @JoinColumn({name: "product_color_id"})
-    productColor: ProductVariantEntity
+    productVariant: ProductVariantEntity
 }

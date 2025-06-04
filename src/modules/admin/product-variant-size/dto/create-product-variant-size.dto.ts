@@ -7,10 +7,10 @@ export class CreateProductVariantSizeDto {
     @IsPositive()
     @ApiProperty({
         example: 1,
-        description: "The product_color_id of the product size",
+        description: "The product_variant_id of the product size",
         required: true
     })
-    product_color_id: number
+    product_variant_id: number
 
     @IsNotEmpty()
     @IsNumber()

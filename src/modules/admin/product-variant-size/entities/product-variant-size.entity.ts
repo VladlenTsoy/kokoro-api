@@ -56,9 +56,9 @@ export class ProductVariantSizeEntity {
     @ApiProperty({
         type: ProductVariantEntity
     })
-    @ManyToOne(() => ProductVariantEntity, (productColor) => productColor.sizes)
-    @JoinColumn({name: "product_color_id"})
-    productColor: ProductVariantEntity
+    @ManyToOne(() => ProductVariantEntity, (productVariant) => productVariant.sizes)
+    @JoinColumn({name: "product_variant_id"})
+    productVariant: ProductVariantEntity
 
     @ApiProperty()
     @ManyToOne(() => SizeEntity)

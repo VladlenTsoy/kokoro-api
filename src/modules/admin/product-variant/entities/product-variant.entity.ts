@@ -1,11 +1,11 @@
 import {ApiProperty} from "@nestjs/swagger"
 import {Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm"
 import {ColorEntity} from "../../color/entities/color.entity"
-import {ProductColorSizeEntity} from "./product-color-size.entity"
-import {ProductColorImageEntity} from "./product-color-image.entity"
+import {ProductVariantSizeEntity} from "../../product-variant-size/entities/product-variant-size.entity"
+import {ProductVariantImageEntity} from "../../product-variant-image/entities/product-variant-image.entity"
 import {ProductEntity} from "../../product/entities/product.entity"
 
-@Entity("product_colors")
+@Entity("product_variants")
 export class ProductVariantEntity {
     @ApiProperty({
         example: 1,
@@ -68,12 +68,12 @@ export class ProductVariantEntity {
     @ApiProperty({
         type: [ProductVariantEntity]
     })
-    @OneToMany(() => ProductColorSizeEntity, (size) => size.productColor)
-    sizes: ProductColorSizeEntity[]
+    @OneToMany(() => ProductVariantSizeEntity, (size) => size.productVariant)
+    sizes: ProductVariantSizeEntity[]
 
     @ApiProperty({
         type: [ProductVariantEntity]
     })
-    @OneToMany(() => ProductColorImageEntity, (image) => image.productColor)
-    images: ProductColorImageEntity[]
+    @OneToMany(() => ProductVariantImageEntity, (image) => image.productVariant)
+    images: ProductVariantImageEntity[]
 }

@@ -4,8 +4,8 @@ import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {ProductVariantEntity} from "./entities/product-variant.entity"
 import {ProductService} from "../product/product.service"
-import {ProductColorSizeService} from "./services/product-color-size.service"
-import {ProductColorImageService} from "./services/product-color-image.service"
+import {ProductVariantSizeService} from "../product-variant-size/product-variant-size.service"
+import {ProductVariantImageService} from "../product-variant-image/product-variant-image.service"
 import {AwsService} from "../aws/aws.service"
 import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
 
@@ -13,17 +13,17 @@ import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
 export class ProductVariantService {
     constructor(
         @InjectRepository(ProductVariantEntity)
-        private readonly productColorRepository: Repository<ProductVariantEntity>,
+        private readonly productVariantRepository: Repository<ProductVariantEntity>,
         private readonly productService: ProductService,
-        private readonly productSizeService: ProductColorSizeService,
-        private readonly productColorImageService: ProductColorImageService,
+        private readonly productSizeService: ProductVariantSizeService,
+        private readonly productVariantImageService: ProductVariantImageService,
         private readonly awsService: AwsService
     ) {}
 
-    async create(createProductColorDto: CreateProductVariantDto) {
+    async create(createProductVariantDto: CreateProductVariantDto) {
         // Select product id
-        let productId = createProductColorDto?.product_id
-        const categoryId = createProductColorDto?.category_id
+        let productId = createProductVariantDto?.product_id
+        const categoryId = createProductVariantDto?.category_id
 
         // Check product_id, if it doesn't exist, create it
         if (!productId) {
@@ -31,32 +31,32 @@ export class ProductVariantService {
             productId = product.id
         }
 
-        // Create product color
-        const productColor = this.productColorRepository.create({
-            title: createProductColorDto.title,
-            price: createProductColorDto.price,
+        // Create product variant
+        const productVariant = this.productVariantRepository.create({
+            title: createProductVariantDto.title,
+            price: createProductVariantDto.price,
             product_id: productId,
-            color_id: createProductColorDto.color_id
+            color_id: createProductVariantDto.color_id
         })
-        // Save product color
-        await this.productColorRepository.save(productColor)
+        // Save product variant
+        await this.productVariantRepository.save(productVariant)
 
         // Create product sizes
         await Promise.all(
-            createProductColorDto.product_sizes.map(async (productSize) => {
+            createProductVariantDto.product_sizes.map(async (productSize) => {
                 await this.productSizeService.create({
                     ...productSize,
-                    product_color_id: productColor.id
+                    product_variant_id: productVariant.id
                 })
             })
         )
 
         // Move images and Create product images
-        if (createProductColorDto.product_images && createProductColorDto.product_images.length) {
+        if (createProductVariantDto.product_images && createProductVariantDto.product_images.length) {
             // Move images from tmp folder
             const images = await Promise.all(
-                createProductColorDto.product_images.map(async (productImage) => {
-                    const newPath = `kokoro/${productColor.id}/${productImage.name}`
+                createProductVariantDto.product_images.map(async (productImage) => {
+                    const newPath = `kokoro/${productVariant.id}/${productImage.name}`
                     await this.awsService.moveFile(productImage.path, newPath)
 
                     return {...productImage, path: newPath}
@@ -65,28 +65,28 @@ export class ProductVariantService {
             //Create product image
             await Promise.all(
                 images.map(async (image) => {
-                    await this.productColorImageService.create({
+                    await this.productVariantImageService.create({
                         ...image,
-                        product_color_id: productColor.id
+                        product_color_id: productVariant.id
                     })
                 })
             )
         }
 
-        return productColor
+        return productVariant
     }
 
     findAll(params: {page: number; pageSize: number}) {
-        return this.productColorRepository
-            .createQueryBuilder("productColor")
-            .leftJoinAndSelect("productColor.color", "color")
-            .leftJoinAndSelect("productColor.sizes", "sizes")
-            .leftJoinAndSelect("productColor.images", "images")
+        return this.productVariantRepository
+            .createQueryBuilder("productVariant")
+            .leftJoinAndSelect("productVariant.color", "color")
+            .leftJoinAndSelect("productVariant.sizes", "sizes")
+            .leftJoinAndSelect("productVariant.images", "images")
             .leftJoinAndSelect("sizes.size", "size")
             .select([
-                "productColor.id",
-                "productColor.title",
-                "productColor.price",
+                "productVariant.id",
+                "productVariant.title",
+                "productVariant.price",
                 "color.title",
                 "color.hex",
                 "sizes.qty",
@@ -101,20 +101,20 @@ export class ProductVariantService {
     }
 
     findOne(id: number) {
-        return `This action returns a #${id} productColor`
+        return `This action returns a #${id} productVariant`
     }
 
-    update(id: number, updateProductColorDto: UpdateProductVariantDto) {
-        console.log(updateProductColorDto)
-        return `This action updates a #${id} productColor`
+    update(id: number, updateProductVariantDto: UpdateProductVariantDto) {
+        console.log(updateProductVariantDto)
+        return `This action updates a #${id} productVariant`
     }
 
     async remove(id: number) {
-        const productColor = await this.productColorRepository.findOneBy({id})
-        if (!productColor) throw new NotFoundException("The product color was not found")
-        await this.productSizeService.removeByProductColorId(id)
-        await this.productColorImageService.removeByProductColorId(id)
-        await this.productColorRepository.delete(id)
-        return {message: "Product color has been successfully removed"}
+        const productVariant = await this.productVariantRepository.findOneBy({id})
+        if (!productVariant) throw new NotFoundException("The product variant was not found")
+        await this.productSizeService.removeByProductVariantId(id)
+        await this.productVariantImageService.removeByProductVariantId(id)
+        await this.productVariantRepository.delete(id)
+        return {message: "Product variant has been successfully removed"}
     }
 }

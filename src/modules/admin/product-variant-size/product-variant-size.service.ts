@@ -19,7 +19,7 @@ export class ProductVariantSizeService {
         return productSize
     }
 
-    async removeByProductColorId(productColorId: number) {
+    async removeByProductVariantId(productColorId: number) {
         await this.productSizeRepository.delete({product_color_id: productColorId})
     }
 }
