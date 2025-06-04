@@ -109,13 +109,30 @@ export class ProductVariantService {
             .getMany()
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} productVariant`
+    async findOne(id: number) {
+        const productVariant = await this.productVariantRepository.findOne({
+            where: {id},
+            relations: {
+                color: true,
+                product: true,
+                sizes: {size: true},
+                images: true
+            }
+        })
+        if (!productVariant) throw new NotFoundException("The product variant was not found")
+        return productVariant
     }
 
-    update(id: number, updateProductVariantDto: UpdateProductVariantDto) {
-        console.log(updateProductVariantDto)
-        return `This action updates a #${id} productVariant`
+    async update(id: number, updateProductVariantDto: UpdateProductVariantDto) {
+        const productVariant = await this.productVariantRepository.findOneBy({id})
+        if (!productVariant) throw new NotFoundException("The product variant was not found")
+
+        if (updateProductVariantDto.title !== undefined) productVariant.title = updateProductVariantDto.title
+        if (updateProductVariantDto.price !== undefined) productVariant.price = updateProductVariantDto.price
+        if (updateProductVariantDto.color_id !== undefined) productVariant.color_id = updateProductVariantDto.color_id
+        if (updateProductVariantDto.product_id !== undefined) productVariant.product_id = updateProductVariantDto.product_id
+
+        return this.productVariantRepository.save(productVariant)
     }
 
     async remove(id: number) {

@@ -56,7 +56,7 @@ export class ProductVariantImageEntity {
     }
 
     @ApiProperty({
-        type: ProductVariantEntity
+        type: () => ProductVariantEntity
     })
     @ManyToOne(() => ProductVariantEntity, (productVariant) => productVariant.images)
     @JoinColumn({name: "product_variant_id"})

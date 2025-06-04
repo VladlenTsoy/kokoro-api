@@ -77,13 +77,13 @@ export class ProductVariantEntity {
     product: ProductEntity
 
     @ApiProperty({
-        type: [ProductVariantSizeEntity]
+        type: () => [ProductVariantSizeEntity]
     })
     @OneToMany(() => ProductVariantSizeEntity, (size) => size.productVariant)
     sizes: ProductVariantSizeEntity[]
 
     @ApiProperty({
-        type: [ProductVariantImageEntity]
+        type: () => [ProductVariantImageEntity]
     })
     @OneToMany(() => ProductVariantImageEntity, (image) => image.productVariant)
     images: ProductVariantImageEntity[]

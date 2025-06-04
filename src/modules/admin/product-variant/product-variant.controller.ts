@@ -34,7 +34,6 @@ export class ProductVariantController {
         isArray: true
     })
     findAll(@Req() req: Request) {
-        console.log(req.query)
         return this.productVariantService.findAll(req.query as unknown as {page: number; pageSize: number})
     }
 

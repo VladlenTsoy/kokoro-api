@@ -50,7 +50,7 @@ export class AwsService {
         const upload = new Upload({
             client: this.s3,
             params: {
-                Bucket: this.configService.get<string>("AWS_BUCKET_NANE"),
+                Bucket: this.configService.get<string>("AWS_BUCKET_NAME"),
                 Key: key,
                 Body: stream,
                 ACL: "public-read",
@@ -72,7 +72,7 @@ export class AwsService {
      */
     async getFile(key: string) {
         const command = new GetObjectCommand({
-            Bucket: this.configService.get<string>("AWS_BUCKET_NANE"),
+            Bucket: this.configService.get<string>("AWS_BUCKET_NAME"),
             Key: key
         })
         return this.s3.send(command)
@@ -84,7 +84,7 @@ export class AwsService {
      * @param keyTo
      */
     async moveFile(keyFrom: string, keyTo: string) {
-        const bucket = this.configService.get<string>("AWS_BUCKET_NANE")
+        const bucket = this.configService.get<string>("AWS_BUCKET_NAME")
 
         try {
             const copyCommand = new CopyObjectCommand({
@@ -114,7 +114,7 @@ export class AwsService {
      */
     async deleteFile(key: string) {
         const command = new DeleteObjectCommand({
-            Bucket: this.configService.get<string>("AWS_BUCKET_NANE"),
+            Bucket: this.configService.get<string>("AWS_BUCKET_NAME"),
             Key: key
         })
         return this.s3.send(command)

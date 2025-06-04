@@ -54,7 +54,7 @@ export class ProductVariantSizeEntity {
     min_qty: number
 
     @ApiProperty({
-        type: ProductVariantEntity
+        type: () => ProductVariantEntity
     })
     @ManyToOne(() => ProductVariantEntity, (productVariant) => productVariant.sizes)
     @JoinColumn({name: "product_variant_id"})
