@@ -9,7 +9,7 @@ import {ProductTagEntity} from "./entities/product-tag.entity"
 export class ProductTagService {
     constructor(
         @InjectRepository(ProductTagEntity)
-        private readonly productColorTagRepository: Repository<ProductTagEntity>
+        private readonly productTagRepository: Repository<ProductTagEntity>
     ) {}
 
     /**
@@ -17,44 +17,44 @@ export class ProductTagService {
      * @private
      */
     private errorNotFound() {
-        throw new NotFoundException("The product color tag was not found")
+        throw new NotFoundException("The product tag was not found")
     }
 
-    async create(createProductColorTagDto: CreateProductTagDto) {
-        const productColorTag = this.productColorTagRepository.create(createProductColorTagDto)
-        // Save product color tag
-        await this.productColorTagRepository.save(productColorTag)
-        return productColorTag
+    async create(createProductTagDto: CreateProductTagDto) {
+        const productTag = this.productTagRepository.create(createProductTagDto)
+        // Save product tag
+        await this.productTagRepository.save(productTag)
+        return productTag
     }
 
     findAll() {
-        return this.productColorTagRepository.find()
+        return this.productTagRepository.find()
     }
 
     async findOne(id: number) {
-        const productColorTag = await this.productColorTagRepository.findOneBy({id})
-        // Not found product color tag
-        if (!productColorTag) this.errorNotFound()
+        const productTag = await this.productTagRepository.findOneBy({id})
+        // Not found product tag
+        if (!productTag) this.errorNotFound()
 
-        return productColorTag
+        return productTag
     }
 
-    async update(id: number, updateProductColorTagDto: UpdateProductTagDto) {
-        const productColorTag = await this.productColorTagRepository.findOneBy({id})
-        // Not found product color tag
-        if (!productColorTag) this.errorNotFound()
+    async update(id: number, updateProductTagDto: UpdateProductTagDto) {
+        const productTag = await this.productTagRepository.findOneBy({id})
+        // Not found product tag
+        if (!productTag) this.errorNotFound()
         // Required fields
-        productColorTag.title = updateProductColorTagDto.title
+        productTag.title = updateProductTagDto.title
 
-        return await this.productColorTagRepository.save(productColorTag)
+        return await this.productTagRepository.save(productTag)
     }
 
     async remove(id: number) {
-        const productColorTag = await this.productColorTagRepository.findOneBy({id})
-        // Not found product color tag
-        if (!productColorTag) this.errorNotFound()
-        await this.productColorTagRepository.delete(id)
+        const productTag = await this.productTagRepository.findOneBy({id})
+        // Not found product tag
+        if (!productTag) this.errorNotFound()
+        await this.productTagRepository.delete(id)
         // Success message
-        return {message: "Product color tag has been successfully removed"}
+        return {message: "Product tag has been successfully removed"}
     }
 }

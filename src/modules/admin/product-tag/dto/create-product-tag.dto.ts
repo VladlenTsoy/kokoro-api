@@ -5,8 +5,8 @@ export class CreateProductTagDto {
     @IsString()
     @IsNotEmpty()
     @ApiProperty({
-        example: "Product color tag title",
-        description: "The title of the product color tag",
+        example: "Product tag title",
+        description: "The title of the product tag",
         required: true
     })
     title: string

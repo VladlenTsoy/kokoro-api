@@ -1,19 +1,19 @@
 import {Injectable} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
-import {ProductColorImageEntity} from "../entities/product-color-image.entity"
+import {ProductVariantImageEntity} from "./entities/product-variant-image.entity"
 import {Repository} from "typeorm"
-import {CreateProductColorImageDto} from "../dto/create-product-color-image.dto"
-import {AwsService} from "../../aws/aws.service"
+import {CreateProductVariantImageDto} from "./dto/create-product-variant-image.dto"
+import {AwsService} from "../aws/aws.service"
 
 @Injectable()
 export class ProductVariantImageService {
     constructor(
-        @InjectRepository(ProductColorImageEntity)
-        private readonly productColorImageRepository: Repository<ProductColorImageEntity>,
+        @InjectRepository(CreateProductVariantImageDto)
+        private readonly productColorImageRepository: Repository<ProductVariantImageEntity>,
         private readonly awsService: AwsService
     ) {}
 
-    async create(createProductColorImageDto: CreateProductColorImageDto) {
+    async create(createProductColorImageDto: CreateProductVariantImageDto) {
         // Create product color image
         const productColorImage = this.productColorImageRepository.create({
             product_color_id: createProductColorImageDto.product_color_id,
