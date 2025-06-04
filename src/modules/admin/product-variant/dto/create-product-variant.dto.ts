@@ -105,6 +105,11 @@ export class CreateProductVariantDto {
     })
     product_id?: number
 
+    @ApiProperty({type: [Number], description: "Список ID свойств продукта"})
+    @IsOptional()
+    @IsArray()
+    productProperties?: number[]
+
     @IsNumber()
     @IsPositive()
     @IsNotEmpty()

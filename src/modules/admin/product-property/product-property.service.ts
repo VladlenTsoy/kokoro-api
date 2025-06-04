@@ -2,7 +2,7 @@ import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductPropertyDto} from "./dto/create-product-property.dto"
 import {UpdateProductPropertyDto} from "./dto/update-product-property.dto"
 import {InjectRepository} from "@nestjs/typeorm"
-import {Repository} from "typeorm"
+import {In, Repository} from "typeorm"
 import {ProductPropertyEntity} from "./entities/product-property.entity"
 
 @Injectable()
@@ -25,6 +25,13 @@ export class ProductPropertyService {
         // Save product property
         await this.productPropertyRepository.save(productProperty)
         return productProperty
+    }
+
+    async findByIds(ids: number[]): Promise<ProductPropertyEntity[]> {
+        if (!ids.length) return []
+        return this.productPropertyRepository.find({
+            where: {id: In(ids)}
+        })
     }
 
     findAll() {

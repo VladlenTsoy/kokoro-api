@@ -7,6 +7,7 @@ import {ProductPropertyEntity} from "./entities/product-property.entity"
 @Module({
     imports: [TypeOrmModule.forFeature([ProductPropertyEntity])],
     controllers: [ProductPropertyController],
-    providers: [ProductPropertyService]
+    providers: [ProductPropertyService],
+    exports: [ProductPropertyService]
 })
 export class ProductPropertyModule {}

@@ -1,5 +1,6 @@
-import {Entity, PrimaryGeneratedColumn, CreateDateColumn, Column} from "typeorm"
+import {Entity, PrimaryGeneratedColumn, CreateDateColumn, Column, ManyToMany, JoinTable} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
+import {ProductPropertyEntity} from "../../product-property/entities/product-property.entity"
 
 @Entity("products")
 export class ProductEntity {
@@ -26,4 +27,12 @@ export class ProductEntity {
     })
     @CreateDateColumn({type: "timestamp"})
     created_at: Date = new Date()
+
+    @ManyToMany(() => ProductPropertyEntity, (property) => property.products)
+    @JoinTable({
+        name: "product_property_bundles",
+        joinColumn: {name: "product_id", referencedColumnName: "id"},
+        inverseJoinColumn: {name: "property_id", referencedColumnName: "id"}
+    })
+    properties: ProductPropertyEntity[]
 }

@@ -27,10 +27,11 @@ export class ProductVariantService {
         let productId = createProductVariantDto?.product_id
         const categoryId = createProductVariantDto?.category_id
         const tags = createProductVariantDto?.tags
+        const productProperties = createProductVariantDto?.productProperties
 
         // Check product_id, if it doesn't exist, create it
         if (!productId) {
-            const product = await this.productService.create({category_id: categoryId})
+            const product = await this.productService.create({category_id: categoryId, properties: productProperties})
             productId = product.id
         }
 
@@ -130,7 +131,8 @@ export class ProductVariantService {
         if (updateProductVariantDto.title !== undefined) productVariant.title = updateProductVariantDto.title
         if (updateProductVariantDto.price !== undefined) productVariant.price = updateProductVariantDto.price
         if (updateProductVariantDto.color_id !== undefined) productVariant.color_id = updateProductVariantDto.color_id
-        if (updateProductVariantDto.product_id !== undefined) productVariant.product_id = updateProductVariantDto.product_id
+        if (updateProductVariantDto.product_id !== undefined)
+            productVariant.product_id = updateProductVariantDto.product_id
 
         return this.productVariantRepository.save(productVariant)
     }

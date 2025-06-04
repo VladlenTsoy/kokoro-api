@@ -1,5 +1,6 @@
-import {ApiProperty} from "@nestjs/swagger"
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
+import {ApiHideProperty, ApiProperty} from "@nestjs/swagger"
+import {Column, Entity, ManyToMany, PrimaryGeneratedColumn} from "typeorm"
+import {ProductEntity} from "../../product/entities/product.entity"
 
 @Entity("product_properties")
 export class ProductPropertyEntity {
@@ -34,4 +35,8 @@ export class ProductPropertyEntity {
     })
     @Column({type: "boolean", default: false})
     is_global: boolean
+
+    @ApiHideProperty()
+    @ManyToMany(() => ProductEntity, (product) => product.properties)
+    products: ProductEntity[]
 }

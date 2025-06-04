@@ -4,12 +4,14 @@ import {Repository} from "typeorm"
 import {ProductEntity} from "./entities/product.entity"
 import {CreateProductDto} from "./dto/create-product.dto"
 import {UpdateProductDto} from "./dto/update-product.dto"
+import {ProductPropertyService} from "../product-property/product-property.service"
 
 @Injectable()
 export class ProductService {
     constructor(
         @InjectRepository(ProductEntity)
-        private readonly productRepository: Repository<ProductEntity>
+        private readonly productRepository: Repository<ProductEntity>,
+        private readonly productPropertyService: ProductPropertyService
     ) {}
 
     /**
@@ -21,8 +23,14 @@ export class ProductService {
     }
 
     async create(createProductDto: CreateProductDto) {
-        const product = this.productRepository.create(createProductDto)
-        // Save product
+        const {properties, ...productData} = createProductDto
+
+        const product = this.productRepository.create(productData)
+
+        if (properties?.length) {
+            product.properties = await this.productPropertyService.findByIds(properties)
+        }
+
         await this.productRepository.save(product)
         return product
     }

@@ -1,9 +1,10 @@
-import {IsBoolean, IsNotEmpty, IsString} from "class-validator"
+import {IsBoolean, IsNotEmpty, IsString, Length} from "class-validator"
 import {ApiProperty} from "@nestjs/swagger"
 
 export class CreateProductPropertyDto {
     @IsNotEmpty()
     @IsString()
+    @Length(1, 64)
     @ApiProperty({
         example: "Состав",
         description: "The title of the product property",
