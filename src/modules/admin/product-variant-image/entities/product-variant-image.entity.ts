@@ -2,11 +2,11 @@ import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typ
 import {ApiProperty} from "@nestjs/swagger"
 import {ProductVariantEntity} from "../../product-variant/entities/product-variant.entity"
 
-@Entity("product_color_images")
+@Entity("product_variant_images")
 export class ProductVariantImageEntity {
     @ApiProperty({
         example: 1,
-        description: "The id of the product color image",
+        description: "The id of the product variant image",
         required: true
     })
     @PrimaryGeneratedColumn()
@@ -14,36 +14,36 @@ export class ProductVariantImageEntity {
 
     @ApiProperty({
         example: 1,
-        description: "The product_color_id of the product color image",
+        description: "The product_variant_id of the product variant image",
         required: true
     })
     @Column({type: "int"})
-    product_color_id: number
+    product_variant_id: number
 
     @ApiProperty({
         example: "Name",
-        description: "The name of the product color image"
+        description: "The name of the product variant image"
     })
     @Column({type: "varchar", length: 50})
     name: string
 
     @ApiProperty({
         example: "Path",
-        description: "The path of the product color image"
+        description: "The path of the product variant image"
     })
     @Column({type: "varchar"})
     path: string
 
     @ApiProperty({
         example: 4096,
-        description: "The size of the product color image"
+        description: "The size of the product variant image"
     })
     @Column({type: "int"})
     size: number
 
     @ApiProperty({
         example: 1,
-        description: "The position of the product color image",
+        description: "The position of the product variant image",
         required: true
     })
     @Column({type: "int"})
@@ -58,7 +58,7 @@ export class ProductVariantImageEntity {
     @ApiProperty({
         type: ProductVariantEntity
     })
-    @ManyToOne(() => ProductVariantEntity, (productColor) => productColor.images)
-    @JoinColumn({name: "product_color_id"})
+    @ManyToOne(() => ProductVariantEntity, (productVariant) => productVariant.images)
+    @JoinColumn({name: "product_variant_id"})
     productVariant: ProductVariantEntity
 }

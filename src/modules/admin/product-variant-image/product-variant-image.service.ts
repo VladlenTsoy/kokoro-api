@@ -9,27 +9,27 @@ import {AwsService} from "../aws/aws.service"
 export class ProductVariantImageService {
     constructor(
         @InjectRepository(ProductVariantImageEntity)
-        private readonly productColorImageRepository: Repository<ProductVariantImageEntity>,
+        private readonly productVariantImageRepository: Repository<ProductVariantImageEntity>,
         private readonly awsService: AwsService
     ) {}
 
-    async create(createProductColorImageDto: CreateProductVariantImageDto) {
+    async create(createProductVariantImageDto: CreateProductVariantImageDto) {
         // Create product variant image
-        const productColorImage = this.productColorImageRepository.create({
-            product_color_id: createProductColorImageDto.product_color_id,
-            name: createProductColorImageDto.name,
-            size: createProductColorImageDto.size,
-            path: createProductColorImageDto.path,
-            position: createProductColorImageDto.position
+        const productVariantImage = this.productVariantImageRepository.create({
+            product_variant_id: createProductVariantImageDto.product_variant_id,
+            name: createProductVariantImageDto.name,
+            size: createProductVariantImageDto.size,
+            path: createProductVariantImageDto.path,
+            position: createProductVariantImageDto.position
         })
         // Save product variant image
-        await this.productColorImageRepository.save(productColorImage)
-        return productColorImage
+        await this.productVariantImageRepository.save(productVariantImage)
+        return productVariantImage
     }
 
-    async removeByProductVariantId(productColorId: number) {
-        const productColorImage = await this.productColorImageRepository.findOneBy({product_color_id: productColorId})
-        if (productColorImage?.path) await this.awsService.deleteFile(productColorImage.path)
-        await this.productColorImageRepository.delete(productColorImage.id)
+    async removeByProductVariantId(productVariantId: number) {
+        const productVariantImage = await this.productVariantImageRepository.findOneBy({product_variant_id: productVariantId})
+        if (productVariantImage?.path) await this.awsService.deleteFile(productVariantImage.path)
+        await this.productVariantImageRepository.delete(productVariantImage.id)
     }
 }

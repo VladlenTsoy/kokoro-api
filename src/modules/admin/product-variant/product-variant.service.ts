@@ -67,7 +67,7 @@ export class ProductVariantService {
                 images.map(async (image) => {
                     await this.productVariantImageService.create({
                         ...image,
-                        product_color_id: productVariant.id
+                        product_variant_id: productVariant.id
                     })
                 })
             )
