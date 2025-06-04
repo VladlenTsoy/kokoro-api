@@ -2,7 +2,7 @@ import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductTagDto} from "./dto/create-product-tag.dto"
 import {UpdateProductTagDto} from "./dto/update-product-tag.dto"
 import {InjectRepository} from "@nestjs/typeorm"
-import {Repository} from "typeorm"
+import {In, Repository} from "typeorm"
 import {ProductTagEntity} from "./entities/product-tag.entity"
 
 @Injectable()
@@ -29,6 +29,12 @@ export class ProductTagService {
 
     findAll() {
         return this.productTagRepository.find()
+    }
+
+    findByIds(tagIds: number[]) {
+        return this.productTagRepository.find({
+            where: {id: In(tagIds)}
+        })
     }
 
     async findOne(id: number) {

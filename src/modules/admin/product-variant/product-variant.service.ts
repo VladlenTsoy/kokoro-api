@@ -8,6 +8,7 @@ import {ProductVariantSizeService} from "../product-variant-size/product-variant
 import {ProductVariantImageService} from "../product-variant-image/product-variant-image.service"
 import {AwsService} from "../aws/aws.service"
 import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
+import {ProductTagService} from "../product-tag/product-tag.service"
 
 @Injectable()
 export class ProductVariantService {
@@ -17,13 +18,15 @@ export class ProductVariantService {
         private readonly productService: ProductService,
         private readonly productSizeService: ProductVariantSizeService,
         private readonly productVariantImageService: ProductVariantImageService,
-        private readonly awsService: AwsService
+        private readonly awsService: AwsService,
+        private readonly productTagService: ProductTagService
     ) {}
 
     async create(createProductVariantDto: CreateProductVariantDto) {
         // Select product id
         let productId = createProductVariantDto?.product_id
         const categoryId = createProductVariantDto?.category_id
+        const tags = createProductVariantDto?.tags
 
         // Check product_id, if it doesn't exist, create it
         if (!productId) {
@@ -38,6 +41,12 @@ export class ProductVariantService {
             product_id: productId,
             color_id: createProductVariantDto.color_id
         })
+
+        // Create product tags
+        if (tags?.length) {
+            productVariant.tags = await this.productTagService.findByIds(createProductVariantDto.tags)
+        }
+
         // Save product variant
         await this.productVariantRepository.save(productVariant)
 
