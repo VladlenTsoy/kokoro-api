@@ -8,13 +8,16 @@ import {
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
-    JoinTable
+    JoinTable,
+    OneToOne
 } from "typeorm"
 import {ColorEntity} from "../../color/entities/color.entity"
 import {ProductVariantSizeEntity} from "../../product-variant-size/entities/product-variant-size.entity"
 import {ProductVariantImageEntity} from "../../product-variant-image/entities/product-variant-image.entity"
 import {ProductEntity} from "../../product/entities/product.entity"
 import {ProductTagEntity} from "../../product-tag/entities/product-tag.entity"
+import {ProductVariantDiscountEntity} from "../../product-variant-discount/entities/product-variant-discount.entity"
+import {ProductVariantMeasurementEntity} from "../../product-variant-measurement/entities/product-variant-measurement.entity"
 
 @Entity("product_variants")
 export class ProductVariantEntity {
@@ -101,4 +104,16 @@ export class ProductVariantEntity {
         }
     })
     tags: ProductTagEntity[]
+
+    @ApiProperty({
+        type: () => ProductVariantImageEntity
+    })
+    @OneToOne(() => ProductVariantImageEntity, (discount) => discount.productVariant)
+    discount: ProductVariantDiscountEntity
+
+    @ApiProperty({
+        type: () => [ProductVariantMeasurementEntity]
+    })
+    @OneToMany(() => ProductVariantMeasurementEntity, (measurement) => measurement.productVariant)
+    measurements: ProductVariantDiscountEntity[]
 }

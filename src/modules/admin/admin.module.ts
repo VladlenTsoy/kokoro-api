@@ -10,6 +10,8 @@ import {ProductTagModule} from "./product-tag/product-tag.module"
 import {ProductModule} from "./product/product.module"
 import {ProductVariantSizeModule} from "./product-variant-size/product-variant-size.module"
 import {ProductVariantImageModule} from "./product-variant-image/product-variant-image.module"
+import {ProductVariantMeasurementModule} from "./product-variant-measurement/product-variant-measurement.module"
+import {ProductVariantDiscountModule} from "./product-variant-discount/product-variant-discount.module"
 
 @Module({
     imports: [
@@ -22,7 +24,9 @@ import {ProductVariantImageModule} from "./product-variant-image/product-variant
         ProductTagModule,
         ProductModule,
         ProductVariantSizeModule,
-        ProductVariantImageModule
+        ProductVariantImageModule,
+        ProductVariantMeasurementModule,
+        ProductVariantDiscountModule
     ],
     providers: [AppService]
 })
