@@ -1,12 +1,19 @@
-import {IsString, IsOptional} from "class-validator"
-import {ApiProperty} from "@nestjs/swagger"
+import {IsString} from "class-validator"
+import {ApiProperty, ApiPropertyOptional} from "@nestjs/swagger"
+
+class GeoLocationDto {
+    @ApiProperty()
+    lat: number
+
+    @ApiProperty()
+    lng: number
+}
 
 export class CreateSalesPointDto {
     @ApiProperty({example: "Филиал Ташкент"})
     @IsString()
     title: string
 
-    @ApiProperty({type: "object", required: false})
-    @IsOptional()
-    location?: Record<string, any>
+    @ApiPropertyOptional({type: GeoLocationDto})
+    location: GeoLocationDto
 }

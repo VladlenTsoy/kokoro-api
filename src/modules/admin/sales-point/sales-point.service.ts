@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common"
+import {Injectable, NotFoundException} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {SalesPointEntity} from "./entities/sales-point.entity"
@@ -24,8 +24,12 @@ export class SalesPointService {
         return this.repo.findOne({where: {id}})
     }
 
-    update(id: number, dto: UpdateSalesPointDto) {
-        return this.repo.update(id, dto)
+    async update(id: number, dto: UpdateSalesPointDto) {
+        const existing = await this.repo.findOneBy({id})
+        if (!existing) throw new NotFoundException("SalesPoint not found")
+
+        const updated = this.repo.merge(existing, dto)
+        return this.repo.save(updated)
     }
 
     remove(id: number) {
