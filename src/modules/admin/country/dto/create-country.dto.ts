@@ -1,17 +1,30 @@
-import {IsString, IsOptional} from "class-validator"
+import {IsString, IsOptional, IsNotEmpty} from "class-validator"
 import {ApiProperty} from "@nestjs/swagger"
 
 export class CreateCountryDto {
-    @ApiProperty()
     @IsString()
+    @IsNotEmpty()
+    @ApiProperty({
+        example: "Country name",
+        description: "The name of the country",
+        required: true
+    })
     name: string
 
-    @ApiProperty({required: false})
     @IsOptional()
     @IsString()
+    @ApiProperty({
+        example: "/link-to-flag",
+        description: "The flag of the country",
+        required: false
+    })
     flag?: string
 
-    @ApiProperty({required: false})
     @IsOptional()
-    position?: any
+    @ApiProperty({
+        example: {lat: 41.311081, lng: 69.240562},
+        description: "The position of the country",
+        required: false
+    })
+    position?: {lat: number; lng: number}
 }

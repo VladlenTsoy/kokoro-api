@@ -5,7 +5,7 @@ import {UpdateCountryDto} from "./dto/update-country.dto"
 import {ApiTags, ApiOperation, ApiParam} from "@nestjs/swagger"
 
 @ApiTags("Countries")
-@Controller("countries")
+@Controller("admin/countries")
 export class CountryController {
     constructor(private readonly service: CountryService) {}
 

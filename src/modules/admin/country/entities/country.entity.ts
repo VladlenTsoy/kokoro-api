@@ -12,7 +12,7 @@ export class CountryEntity {
     flag?: string
 
     @Column({type: "json", nullable: true})
-    position?: any
+    position?: {lat: number; lng: number}
 
     @CreateDateColumn()
     createdAt: Date

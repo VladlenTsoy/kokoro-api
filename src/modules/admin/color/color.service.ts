@@ -67,7 +67,6 @@ export class ColorService {
         color.deleted_at = new Date()
         // Save
         await this.colorRepository.save(color)
-        // const color = await this.colorRepository.delete(id)
         // Success message
         return {message: "Color has been successfully removed"}
     }
