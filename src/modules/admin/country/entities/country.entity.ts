@@ -1,4 +1,4 @@
-import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn} from "typeorm"
+import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
 
 @Entity("countries")
