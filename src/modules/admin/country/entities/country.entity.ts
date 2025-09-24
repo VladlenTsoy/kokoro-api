@@ -1,5 +1,6 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm"
+import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
+import {CityEntity} from "../../city/entities/city.entity"
 
 @Entity("countries")
 export class CountryEntity {
@@ -30,10 +31,13 @@ export class CountryEntity {
 
     @ApiProperty({
         example: {lat: 41.311081, lng: 69.240562},
-        description: "The flag of the country",
+        description: "The location of the country",
         required: false,
         nullable: true
     })
     @Column({type: "json", nullable: true})
     position?: {lat: number; lng: number}
+
+    @OneToMany(() => CityEntity, (city) => city.country, {cascade: true, onDelete: "CASCADE"})
+    cities: CityEntity[]
 }

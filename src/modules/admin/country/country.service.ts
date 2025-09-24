@@ -25,7 +25,9 @@ export class CountryService {
     }
 
     findAll() {
-        return this.repo.find()
+        return this.repo.find({
+            relations: ["cities"]
+        })
     }
 
     findOne(id: number) {
