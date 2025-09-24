@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm"
+import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm"
 import {ApiProperty} from "@nestjs/swagger"
 import {CityEntity} from "../../city/entities/city.entity"
 
