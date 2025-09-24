@@ -1,4 +1,4 @@
-import {IsBoolean, IsNotEmpty, IsNumber, IsString} from "class-validator"
+import {IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator"
 import {ApiProperty} from "@nestjs/swagger"
 
 export class CreateProductCategoryDto {
@@ -12,10 +12,12 @@ export class CreateProductCategoryDto {
     title: string
 
     @IsNumber()
+    @IsOptional()
     @ApiProperty({
         example: 1,
         description: "The parent_category_id of the product category",
-        default: null
+        default: null,
+        required: false
     })
     parent_category_id: number | null
 
@@ -27,10 +29,12 @@ export class CreateProductCategoryDto {
     url: string
 
     @IsBoolean()
+    @IsOptional()
     @ApiProperty({
         example: true,
         description: "The is_hide of the product category",
-        default: null
+        default: null,
+        required: false
     })
     is_hide: boolean | null
 }
