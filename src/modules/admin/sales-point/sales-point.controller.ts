@@ -5,7 +5,7 @@ import {UpdateSalesPointDto} from "./dto/update-sales-point.dto"
 import {ApiTags, ApiOperation, ApiParam} from "@nestjs/swagger"
 
 @ApiTags("Sales Points")
-@Controller("sales-points")
+@Controller("admin/sales-points")
 export class SalesPointController {
     constructor(private readonly service: SalesPointService) {}
 
