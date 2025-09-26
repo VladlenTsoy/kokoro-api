@@ -36,6 +36,18 @@ export class ProductCategoryController {
         return this.productCategoryService.findAll()
     }
 
+    @Get("with-subcategories")
+    @ApiOperation({summary: "Get all product categories with sub categories"})
+    @ApiResponse({
+        status: 200,
+        description: "List of all product categories with sub categories",
+        type: ProductCategoryEntity,
+        isArray: true
+    })
+    findAllWithSubCategories() {
+        return this.productCategoryService.findAllWithSubCategories()
+    }
+
     @Get(":id")
     @ApiOperation({summary: "Get product category by id"})
     @ApiResponse({

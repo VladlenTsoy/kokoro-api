@@ -1,5 +1,5 @@
 import {ApiProperty} from "@nestjs/swagger"
-import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn} from "typeorm"
+import {Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm"
 
 @Entity("product_categories")
 export class ProductCategoryEntity {
@@ -24,7 +24,7 @@ export class ProductCategoryEntity {
         description: "The parent_category_id of the product category",
         default: null
     })
-    @Column({type: "varchar", length: 20, nullable: true})
+    @Column({type: "int", nullable: true})
     parent_category_id: number | null
 
     @ApiProperty({
@@ -50,4 +50,14 @@ export class ProductCategoryEntity {
     })
     @CreateDateColumn({type: "timestamp"})
     created_at: Date = new Date()
+
+    @ManyToOne(() => ProductCategoryEntity, (category) => category.sub_categories, {
+        nullable: true,
+        onDelete: "CASCADE"
+    })
+    @JoinColumn({name: "parent_category_id"})
+    parent?: ProductCategoryEntity
+
+    @OneToMany(() => ProductCategoryEntity, (category) => category.parent)
+    sub_categories: ProductCategoryEntity[]
 }

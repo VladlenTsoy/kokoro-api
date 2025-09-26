@@ -31,6 +31,14 @@ export class ProductCategoryService {
         return this.productCategoryRepository.find()
     }
 
+    findAllWithSubCategories() {
+        return this.productCategoryRepository.find({
+            where: {parent: null},
+            relations: ["sub_categories"],
+            order: {id: "ASC"}
+        })
+    }
+
     async findOne(id: number) {
         const productCategory = await this.productCategoryRepository.findOneBy({id})
         // Not found product category
