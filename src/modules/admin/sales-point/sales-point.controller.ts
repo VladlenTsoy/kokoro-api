@@ -21,6 +21,12 @@ export class SalesPointController {
         return this.service.findAll()
     }
 
+    @Get("with-storages")
+    @ApiOperation({summary: "Получить все точки продаж с хранением"})
+    findAllWithProductStorages() {
+        return this.service.findAllWithProductStorages()
+    }
+
     @Get(":id")
     @ApiOperation({summary: "Получить точку продаж по ID"})
     @ApiParam({name: "id", type: Number})

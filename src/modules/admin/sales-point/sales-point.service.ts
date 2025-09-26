@@ -20,6 +20,13 @@ export class SalesPointService {
         return this.repo.find()
     }
 
+    findAllWithProductStorages() {
+        return this.repo.find({
+            relations: ["product_storages"],
+            order: {id: "ASC"}
+        })
+    }
+
     findOne(id: number) {
         return this.repo.findOne({where: {id}})
     }

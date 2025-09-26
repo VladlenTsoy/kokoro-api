@@ -1,4 +1,5 @@
-import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn} from "typeorm"
+import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany} from "typeorm"
+import {ProductStorageEntity} from "../../product-storage/entities/product-storage.entity"
 
 @Entity("sales_points")
 export class SalesPointEntity {
@@ -13,4 +14,7 @@ export class SalesPointEntity {
 
     @CreateDateColumn()
     createdAt: Date
+
+    @OneToMany(() => ProductStorageEntity, (storage) => storage.salesPoint)
+    product_storages: ProductStorageEntity[]
 }
