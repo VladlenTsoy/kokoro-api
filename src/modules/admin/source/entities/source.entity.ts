@@ -1,7 +1,13 @@
 import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn} from "typeorm"
+import {ApiProperty} from "@nestjs/swagger"
 
 @Entity("sources")
 export class SourceEntity {
+    @ApiProperty({
+        example: 1,
+        description: "The id of the source",
+        required: true
+    })
     @PrimaryGeneratedColumn()
     id: number
 
