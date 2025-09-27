@@ -5,7 +5,7 @@ import {UpdateProductTagDto} from "./dto/update-product-tag.dto"
 import {ApiBody, ApiOperation, ApiResponse} from "@nestjs/swagger"
 import {ProductTagEntity} from "./entities/product-tag.entity"
 
-@Controller("product-variant-tag")
+@Controller("admin/product-variant-tag")
 export class ProductTagController {
     constructor(private readonly productTagService: ProductTagService) {}
 
