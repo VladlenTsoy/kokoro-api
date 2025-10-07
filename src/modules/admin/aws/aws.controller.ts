@@ -12,7 +12,9 @@ import {
 import {AwsService} from "./aws.service"
 import {FileInterceptor} from "@nestjs/platform-express"
 import {DeleteImageDto} from "./dto/delete-image.dto"
-import {ApiBearerAuth, ApiBody, ApiOperation, ApiTags} from "@nestjs/swagger"
+import {ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
+import {UploadImageResponse} from "./dto/upload-image-response.dto"
+import {DeleteImageResponse} from "./dto/delete-image-response.dto"
 
 @ApiBearerAuth()
 @ApiTags("Images")
@@ -22,6 +24,24 @@ export class AwsController {
 
     @Post("upload")
     @ApiOperation({summary: "Upload image"})
+    @ApiConsumes("multipart/form-data")
+    @ApiBody({
+        description: "Upload image file",
+        schema: {
+            type: "object",
+            properties: {
+                file: {
+                    type: "string",
+                    format: "binary"
+                }
+            }
+        }
+    })
+    @ApiResponse({
+        status: 200,
+        description: "Successfully uploaded image",
+        type: UploadImageResponse
+    })
     @UseInterceptors(FileInterceptor("file"))
     async create(@UploadedFile() file: Express.Multer.File) {
         const uploadedImage = await this.awsService.uploadFile(file, {
@@ -39,6 +59,19 @@ export class AwsController {
     @Post("delete")
     @ApiOperation({summary: "Delete image"})
     @ApiBody({type: DeleteImageDto})
+    @ApiResponse({
+        status: 200,
+        description: "Image successfully deleted",
+        type: DeleteImageResponse
+    })
+    @ApiResponse({
+        status: 404,
+        description: "Image not found"
+    })
+    @ApiResponse({
+        status: 500,
+        description: "Error deleting image"
+    })
     @UsePipes(new ValidationPipe({transform: true}))
     async delete(@Body() deleteImageDto: DeleteImageDto) {
         // Check image
@@ -52,7 +85,7 @@ export class AwsController {
         // Delete image
         try {
             await this.awsService.deleteFile(deleteImageDto.path)
-        } catch (e) {
+        } catch {
             throw new InternalServerErrorException("Error loading image")
         }
 
