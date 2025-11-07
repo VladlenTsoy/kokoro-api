@@ -2,7 +2,7 @@ import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductCategoryDto} from "./dto/create-product-category.dto"
 import {UpdateProductCategoryDto} from "./dto/update-product-category.dto"
 import {InjectRepository} from "@nestjs/typeorm"
-import {Repository} from "typeorm"
+import {IsNull, Repository} from "typeorm"
 import {ProductCategoryEntity} from "./entities/product-category.entity"
 
 @Injectable()
@@ -33,8 +33,8 @@ export class ProductCategoryService {
 
     findAllWithSubCategories() {
         return this.productCategoryRepository.find({
-            where: {parent: null},
-            relations: ["sub_categories"],
+            where: {parent: IsNull()},
+            relations: ["sub_categories", "sub_categories.sub_categories"],
             order: {id: "ASC"}
         })
     }
