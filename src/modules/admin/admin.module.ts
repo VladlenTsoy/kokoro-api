@@ -23,6 +23,7 @@ import {CityModule} from "./city/city.module"
 import {OrderAddressModule} from "./order-address/order-address.module"
 import {OrderModule} from "./order/order.module"
 import {OrderItemModule} from "./order-item/order-item.module"
+import {ProductVariantStatusModule} from "./product-variant-status/product-variant-status.module"
 
 @Module({
     imports: [
@@ -49,7 +50,8 @@ import {OrderItemModule} from "./order-item/order-item.module"
         OrderAddressModule,
         OrderModule,
         OrderItemModule,
-        OrderStatusModule
+        OrderStatusModule,
+        ProductVariantStatusModule
     ],
     providers: [AppService]
 })
