@@ -24,7 +24,7 @@ export class CreateProductVariantStatusDto {
         description: "The is_default of the product variant status",
         required: false
     })
-    @ApiProperty({example: true})
+    @IsOptional()
     @IsBoolean()
     is_default: boolean
 }
