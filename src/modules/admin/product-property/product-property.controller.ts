@@ -5,7 +5,7 @@ import {UpdateProductPropertyDto} from "./dto/update-product-property.dto"
 import {ApiBody, ApiOperation, ApiResponse} from "@nestjs/swagger"
 import {ProductPropertyEntity} from "./entities/product-property.entity"
 
-@Controller("product-property")
+@Controller("admin/product-property")
 export class ProductPropertyController {
     constructor(private readonly productPropertyService: ProductPropertyService) {}
 
