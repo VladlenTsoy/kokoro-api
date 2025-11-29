@@ -34,8 +34,8 @@ export class ProductPropertyService {
         })
     }
 
-    findAll() {
-        return this.productPropertyRepository.find()
+    findAll(filter?: {isGlobal?: boolean}) {
+        return this.productPropertyRepository.findBy({is_global: filter.isGlobal})
     }
 
     async findOne(id: number) {

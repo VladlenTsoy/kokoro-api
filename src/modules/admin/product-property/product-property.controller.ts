@@ -1,8 +1,8 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, Query, UsePipes, ValidationPipe} from "@nestjs/common"
 import {ProductPropertyService} from "./product-property.service"
 import {CreateProductPropertyDto} from "./dto/create-product-property.dto"
 import {UpdateProductPropertyDto} from "./dto/update-product-property.dto"
-import {ApiBody, ApiOperation, ApiResponse} from "@nestjs/swagger"
+import {ApiBody, ApiOperation, ApiQuery, ApiResponse} from "@nestjs/swagger"
 import {ProductPropertyEntity} from "./entities/product-property.entity"
 
 @Controller("admin/product-property")
@@ -14,7 +14,7 @@ export class ProductPropertyController {
     @ApiBody({type: CreateProductPropertyDto})
     @ApiResponse({
         status: 200,
-        description: "New color created",
+        description: "New product property created",
         type: ProductPropertyEntity
     })
     @UsePipes(new ValidationPipe({transform: true}))
@@ -24,14 +24,21 @@ export class ProductPropertyController {
 
     @Get()
     @ApiOperation({summary: "Get all product properties"})
+    @ApiQuery({
+        name: "is_global",
+        required: false,
+        type: Boolean,
+        description: "Filter by global properties. Default is false"
+    })
     @ApiResponse({
         status: 200,
         description: "List of all product properties",
         type: ProductPropertyEntity,
         isArray: true
     })
-    findAll() {
-        return this.productPropertyService.findAll()
+    findAll(@Query("is_global") isGlobal?: string) {
+        const isGlobalBool = isGlobal === "1"
+        return this.productPropertyService.findAll({isGlobal: isGlobalBool})
     }
 
     @Get(":id")
