@@ -18,6 +18,7 @@ import {ProductEntity} from "../../product/entities/product.entity"
 import {ProductTagEntity} from "../../product-tag/entities/product-tag.entity"
 import {ProductVariantDiscountEntity} from "../../product-variant-discount/entities/product-variant-discount.entity"
 import {ProductVariantMeasurementEntity} from "../../product-variant-measurement/entities/product-variant-measurement.entity"
+import {ProductVariantStatusEntity} from "../../product-variant-status/entities/product-variant-status.entity"
 
 @Entity("product_variants")
 export class ProductVariantEntity {
@@ -55,11 +56,35 @@ export class ProductVariantEntity {
 
     @ApiProperty({
         example: 1,
+        description: "The storage_id of the product variant",
+        required: true
+    })
+    @Column({type: "int"})
+    storage_id: number
+
+    @ApiProperty({
+        example: 1,
+        description: "The status_id of the product variant",
+        required: true
+    })
+    @Column({type: "int"})
+    status_id: number
+
+    @ApiProperty({
+        example: 1,
         description: "The color_id of the product variant",
         required: true
     })
     @Column({type: "int"})
     color_id: number
+
+    @ApiProperty({
+        example: true,
+        description: "The is_new of the product variant",
+        required: true
+    })
+    @Column({type: "boolean"})
+    is_new: boolean
 
     @ApiProperty({
         example: "2023-12-16T11:21:52.000Z",
@@ -78,6 +103,11 @@ export class ProductVariantEntity {
     @ManyToOne(() => ProductEntity)
     @JoinColumn({name: "product_id"})
     product: ProductEntity
+
+    @ApiProperty()
+    @ManyToOne(() => ProductVariantStatusEntity)
+    @JoinColumn({name: "status_id"})
+    status: ProductVariantStatusEntity
 
     @ApiProperty({
         type: () => [ProductVariantSizeEntity]

@@ -1,4 +1,13 @@
-import {IsArray, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, ValidateNested} from "class-validator"
+import {
+    IsArray,
+    IsBoolean,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsPositive,
+    IsString,
+    ValidateNested
+} from "class-validator"
 import {ApiProperty} from "@nestjs/swagger"
 import {Type} from "class-transformer"
 
@@ -13,11 +22,11 @@ export class ProductSizeDto {
     })
     size_id: number
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     @ApiProperty({
         example: 5000,
-        description: "The price of the product size",
+        description: "The cost_price of the product size",
         required: true
     })
     cost_price: number
@@ -64,13 +73,13 @@ export class ProductImageDto {
     })
     size: number
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     @IsPositive()
     @ApiProperty({
         example: 1,
         description: "The position of the product_variant_image",
-        required: true
+        required: false
     })
     position: number
 }
@@ -129,6 +138,35 @@ export class CreateProductVariantDto {
         required: true
     })
     color_id: number
+
+    @IsNumber()
+    @IsPositive()
+    @IsNotEmpty()
+    @ApiProperty({
+        example: 1,
+        description: "The storage_id of the product variant",
+        required: true
+    })
+    storage_id: number
+
+    @IsNumber()
+    @IsPositive()
+    @IsNotEmpty()
+    @ApiProperty({
+        example: 1,
+        description: "The status_id of the product variant",
+        required: true
+    })
+    status_id: number
+
+    @IsBoolean()
+    @IsNotEmpty()
+    @ApiProperty({
+        example: true,
+        description: "The is_new of the product variant",
+        required: true
+    })
+    is_new: boolean
 
     @IsArray()
     @ValidateNested({each: true})

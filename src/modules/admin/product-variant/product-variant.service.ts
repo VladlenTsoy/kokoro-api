@@ -26,6 +26,7 @@ export class ProductVariantService {
         // Select product id
         let productId = createProductVariantDto?.product_id
         const categoryId = createProductVariantDto?.category_id
+        const storageId = createProductVariantDto?.storage_id
         const tags = createProductVariantDto?.tags
         const productProperties = createProductVariantDto?.productProperties
 
@@ -40,6 +41,7 @@ export class ProductVariantService {
             title: createProductVariantDto.title,
             price: createProductVariantDto.price,
             product_id: productId,
+            storage_id: storageId,
             color_id: createProductVariantDto.color_id
         })
 
@@ -56,6 +58,7 @@ export class ProductVariantService {
             createProductVariantDto.product_sizes.map(async (productSize) => {
                 await this.productSizeService.create({
                     ...productSize,
+                    cost_price: productSize.cost_price || 0,
                     product_variant_id: productVariant.id
                 })
             })
@@ -74,9 +77,10 @@ export class ProductVariantService {
             )
             //Create product image
             await Promise.all(
-                images.map(async (image) => {
+                images.map(async (image, key) => {
                     await this.productVariantImageService.create({
                         ...image,
+                        position: image.position || key + 1,
                         product_variant_id: productVariant.id
                     })
                 })
@@ -102,7 +106,7 @@ export class ProductVariantService {
                 "sizes.qty",
                 "size.title",
                 "images.id",
-                // "images.path",
+                "images.path",
                 "images.position"
             ])
             .skip((params.page - 1) * params.pageSize)
