@@ -91,7 +91,8 @@ export class AwsService {
                 Bucket: bucket,
                 CopySource: `${bucket}/${keyFrom}`,
                 Key: keyTo,
-                MetadataDirective: "COPY"
+                MetadataDirective: "COPY",
+                ACL: "public-read"
             })
             await this.s3.send(copyCommand)
 
