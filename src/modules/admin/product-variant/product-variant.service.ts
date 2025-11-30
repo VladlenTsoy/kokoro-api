@@ -101,14 +101,18 @@ export class ProductVariantService {
                 "productVariant.id",
                 "productVariant.title",
                 "productVariant.price",
+                "color.id",
                 "color.title",
                 "color.hex",
+                "sizes.id",
                 "sizes.qty",
+                "size.id",
                 "size.title",
                 "images.id",
                 "images.path",
                 "images.position"
             ])
+            .orderBy("productVariant.id", "ASC")
             .skip((params.page - 1) * params.pageSize)
             .take(params.pageSize)
             .getMany()
