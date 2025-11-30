@@ -82,6 +82,13 @@ export class ProductImageDto {
         required: false
     })
     position: number
+
+    @IsString()
+    @ApiProperty({
+        example: "Product variant image key",
+        description: "The key of the product_variant_image"
+    })
+    key: string
 }
 
 export class CreateProductVariantDto {

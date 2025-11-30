@@ -70,7 +70,7 @@ export class ProductVariantService {
             const images = await Promise.all(
                 createProductVariantDto.product_images.map(async (productImage) => {
                     const newPath = `kokoro/${productVariant.id}/${productImage.name}`
-                    await this.awsService.moveFile(productImage.path, newPath)
+                    await this.awsService.moveFile(productImage.key, newPath)
 
                     return {...productImage, path: newPath}
                 })

@@ -90,7 +90,8 @@ export class AwsService {
             const copyCommand = new CopyObjectCommand({
                 Bucket: bucket,
                 CopySource: `${bucket}/${keyFrom}`,
-                Key: keyTo
+                Key: keyTo,
+                MetadataDirective: "COPY"
             })
             await this.s3.send(copyCommand)
 
