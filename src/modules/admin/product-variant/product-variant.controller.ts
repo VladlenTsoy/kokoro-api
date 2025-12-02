@@ -1,10 +1,10 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe, Req} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
 import {ProductVariantService} from "./product-variant.service"
 import {CreateProductVariantDto} from "./dto/create-product-variant.dto"
 import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
 import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {ProductVariantEntity} from "./entities/product-variant.entity"
-import {Request} from "express"
+import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
 
 @ApiBearerAuth()
 @ApiTags("Product Variants")
@@ -25,16 +25,18 @@ export class ProductVariantController {
         return this.productVariantService.create(createProductVariantDto)
     }
 
-    @Get()
+    @Post("all")
     @ApiOperation({summary: "Get all product variants"})
+    @ApiBody({type: FilterProductVariantDto})
+    @UsePipes(new ValidationPipe({transform: true}))
     @ApiResponse({
         status: 200,
         description: "List of all product variants",
         type: ProductVariantEntity,
         isArray: true
     })
-    findAll(@Req() req: Request) {
-        return this.productVariantService.findAll(req.query as unknown as {page: number; pageSize: number})
+    findAll(@Body() filterProductVariantDto: FilterProductVariantDto) {
+        return this.productVariantService.findAll(filterProductVariantDto)
     }
 
     @Get(":id")
