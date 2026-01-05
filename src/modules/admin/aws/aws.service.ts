@@ -44,7 +44,7 @@ export class AwsService {
         const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`
         const key = `${this.configService.get("AWS_ROOT_PATH")}/${filePath}/${filename}`
 
-        const imageBuffer = await sharp(file.buffer).webp({quality}).resize(width).toBuffer()
+        const imageBuffer = await sharp(file.buffer).rotate().webp({quality}).resize(width).toBuffer()
         const stream = Readable.from(imageBuffer)
 
         const upload = new Upload({
