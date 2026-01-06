@@ -10,6 +10,7 @@ import {AwsService} from "../aws/aws.service"
 import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
 import {ProductTagService} from "../product-tag/product-tag.service"
 import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
+import {ProductVariantDiscountService} from "../product-variant-discount/product-variant-discount.service"
 
 @Injectable()
 export class ProductVariantService {
@@ -20,16 +21,20 @@ export class ProductVariantService {
         private readonly productSizeService: ProductVariantSizeService,
         private readonly productVariantImageService: ProductVariantImageService,
         private readonly awsService: AwsService,
-        private readonly productTagService: ProductTagService
+        private readonly productTagService: ProductTagService,
+        private readonly productDiscountService: ProductVariantDiscountService
     ) {}
 
     async create(createProductVariantDto: CreateProductVariantDto) {
         // Select product id
         let productId = createProductVariantDto?.product_id
         const categoryId = createProductVariantDto?.category_id
+        const statusId = createProductVariantDto?.status_id
         const storageId = createProductVariantDto?.storage_id
         const tags = createProductVariantDto?.tags
         const productProperties = createProductVariantDto?.productProperties
+        const discount = createProductVariantDto?.discount
+        const isNew = createProductVariantDto?.is_new
 
         // Check product_id, if it doesn't exist, create it
         if (!productId) {
@@ -43,6 +48,8 @@ export class ProductVariantService {
             price: createProductVariantDto.price,
             product_id: productId,
             storage_id: storageId,
+            status_id: statusId,
+            is_new: isNew,
             color_id: createProductVariantDto.color_id
         })
 
@@ -53,6 +60,25 @@ export class ProductVariantService {
 
         // Save product variant
         await this.productVariantRepository.save(productVariant)
+
+        // Create discount
+        if (discount && discount.discountPercent > 0) {
+            const selectedDiscount = await this.productDiscountService.findOneByProductVariantId(productVariant.id)
+            if (selectedDiscount) {
+                await this.productDiscountService.update(selectedDiscount.id, {
+                    discountPercent: discount.discountPercent,
+                    endDate: discount.endDate
+                })
+            } else {
+                await this.productDiscountService.create({
+                    discountPercent: discount.discountPercent,
+                    endDate: discount.endDate,
+                    productVariant: productVariant
+                })
+            }
+        } else {
+            await this.productDiscountService.removeByProductVariantId(productVariant.id)
+        }
 
         // Create product sizes
         await Promise.all(
@@ -199,6 +225,7 @@ export class ProductVariantService {
 
         const variants = await this.productVariantRepository
             .createQueryBuilder("productVariant")
+            .leftJoinAndSelect("productVariant.discount", "discount")
             .leftJoinAndSelect("productVariant.color", "color")
             .leftJoinAndSelect("productVariant.sizes", "sizes")
             .leftJoinAndSelect("sizes.size", "size")
@@ -221,7 +248,9 @@ export class ProductVariantService {
                 "images.path",
                 "images.position",
                 "status.id",
-                "status.title"
+                "status.title",
+                "discount.discountPercent",
+                "discount.endDate"
             ])
             .orderBy("productVariant.id", "ASC")
             .addOrderBy("size.id", "ASC")
@@ -234,15 +263,48 @@ export class ProductVariantService {
     }
 
     async findOne(id: number) {
-        const productVariant = await this.productVariantRepository.findOne({
-            where: {id},
-            relations: {
-                color: true,
-                product: true,
-                sizes: {size: true},
-                images: true
-            }
-        })
+        const productVariant = await this.productVariantRepository
+            .createQueryBuilder("productVariant")
+            .leftJoinAndSelect("productVariant.product", "product")
+            .leftJoinAndSelect("productVariant.discount", "discount")
+            .leftJoinAndSelect("productVariant.color", "color")
+            .leftJoinAndSelect("productVariant.sizes", "sizes")
+            .leftJoinAndSelect("sizes.size", "size")
+            .leftJoinAndSelect("productVariant.images", "images")
+            .leftJoinAndSelect("productVariant.status", "status")
+            .where("productVariant.id = :id", {id})
+            .select([
+                "productVariant.id",
+                "productVariant.title",
+                "productVariant.price",
+                "productVariant.color_id",
+                "productVariant.storage_id",
+                "productVariant.status_id",
+                "productVariant.is_new",
+
+                // category_id из product
+                "product.category_id",
+
+                "sizes.id",
+                "sizes.qty",
+                "sizes.cost_price",
+                "sizes.min_qty",
+
+                "size.id",
+                "size.title",
+
+                "discount.discountPercent",
+                "discount.endDate",
+
+                "images.id",
+                "images.name",
+                "images.path",
+                "images.position",
+                "images.size"
+            ])
+            .orderBy("size.id", "ASC")
+            .getOne()
+
         if (!productVariant) throw new NotFoundException("The product variant was not found")
         return productVariant
     }

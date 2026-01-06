@@ -1,8 +1,9 @@
 import {
     IsArray,
-    IsBoolean,
+    IsBoolean, IsDateString,
     IsNotEmpty,
     IsNumber,
+    IsObject,
     IsOptional,
     IsPositive,
     IsString,
@@ -89,6 +90,22 @@ export class ProductImageDto {
         description: "The key of the product_variant_image"
     })
     key: string
+}
+
+export class ProductDiscountDto {
+    @IsString()
+    @ApiProperty({
+        example: "Product variant discountPercent",
+        description: "The discountPercent of the product_variant_discount"
+    })
+    discountPercent: number
+
+    @IsDateString()
+    @ApiProperty({
+        example: "Product variant discount endDate",
+        description: "The endDate of the product_variant_discount"
+    })
+    endDate: Date
 }
 
 export class CreateProductVariantDto {
@@ -196,6 +213,15 @@ export class CreateProductVariantDto {
         required: true
     })
     product_images: ProductImageDto[]
+
+    @Type(() => ProductDiscountDto)
+    @IsOptional()
+    @ApiProperty({
+        type: [ProductDiscountDto],
+        description: "The product_discount of the product variant",
+        required: true
+    })
+    discount: ProductDiscountDto
 
     @ApiProperty({type: [Number], description: "List id tags"})
     @IsOptional()

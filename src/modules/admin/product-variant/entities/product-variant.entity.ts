@@ -136,10 +136,10 @@ export class ProductVariantEntity {
     tags: ProductTagEntity[]
 
     @ApiProperty({
-        type: () => ProductVariantImageEntity
+        type: () => ProductVariantDiscountEntity
     })
-    @OneToOne(() => ProductVariantImageEntity, (discount) => discount.productVariant)
-    discount: ProductVariantDiscountEntity
+    @OneToOne(() => ProductVariantDiscountEntity, (discount) => discount.productVariant)
+    discount: ProductVariantDiscountEntity | null
 
     @ApiProperty({
         type: () => [ProductVariantMeasurementEntity]

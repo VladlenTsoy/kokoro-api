@@ -24,11 +24,29 @@ export class ProductVariantDiscountService {
         return this.repo.findOne({where: {id}})
     }
 
+    findOneByProductVariantId(productVariantId: number) {
+        return this.repo.findOne({
+            where: {
+                productVariant: {
+                    id: productVariantId
+                }
+            }
+        })
+    }
+
     update(id: number, dto: UpdateProductVariantDiscountDto) {
         return this.repo.update(id, dto)
     }
 
     remove(id: number) {
         return this.repo.delete(id)
+    }
+
+    removeByProductVariantId(productVariantId: number) {
+        return this.repo.delete({
+            productVariant: {
+                id: productVariantId
+            }
+        })
     }
 }

@@ -8,6 +8,7 @@ import {ProductVariantSizeModule} from "../product-variant-size/product-variant-
 import {ProductVariantImageModule} from "../product-variant-image/product-variant-image.module"
 import {AwsModule} from "../aws/aws.module"
 import {ProductTagModule} from "../product-tag/product-tag.module"
+import {ProductVariantDiscountModule} from "../product-variant-discount/product-variant-discount.module"
 
 @Module({
     imports: [
@@ -16,7 +17,8 @@ import {ProductTagModule} from "../product-tag/product-tag.module"
         ProductVariantSizeModule,
         ProductVariantImageModule,
         AwsModule,
-        ProductTagModule
+        ProductTagModule,
+        ProductVariantDiscountModule
     ],
     controllers: [ProductVariantController],
     providers: [ProductVariantService]
