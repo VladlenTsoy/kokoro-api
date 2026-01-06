@@ -1,9 +1,9 @@
 import {
     IsArray,
-    IsBoolean, IsDateString,
+    IsBoolean,
+    IsDateString,
     IsNotEmpty,
     IsNumber,
-    IsObject,
     IsOptional,
     IsPositive,
     IsString,
