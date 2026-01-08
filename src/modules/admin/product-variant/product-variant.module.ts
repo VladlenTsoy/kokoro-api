@@ -9,6 +9,7 @@ import {ProductVariantImageModule} from "../product-variant-image/product-varian
 import {AwsModule} from "../aws/aws.module"
 import {ProductTagModule} from "../product-tag/product-tag.module"
 import {ProductVariantDiscountModule} from "../product-variant-discount/product-variant-discount.module"
+import {ProductVariantMeasurementModule} from "../product-variant-measurement/product-variant-measurement.module"
 
 @Module({
     imports: [
@@ -18,7 +19,8 @@ import {ProductVariantDiscountModule} from "../product-variant-discount/product-
         ProductVariantImageModule,
         AwsModule,
         ProductTagModule,
-        ProductVariantDiscountModule
+        ProductVariantDiscountModule,
+        ProductVariantMeasurementModule
     ],
     controllers: [ProductVariantController],
     providers: [ProductVariantService]

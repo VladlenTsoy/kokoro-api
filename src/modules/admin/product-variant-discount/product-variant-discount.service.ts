@@ -4,6 +4,7 @@ import {Repository} from "typeorm"
 import {ProductVariantDiscountEntity} from "./entities/product-variant-discount.entity"
 import {CreateProductVariantDiscountDto} from "./dto/create-product-variant-discount.dto"
 import {UpdateProductVariantDiscountDto} from "./dto/update-product-variant-discount.dto"
+import {ProductVariantEntity} from "../product-variant/entities/product-variant.entity"
 
 @Injectable()
 export class ProductVariantDiscountService {
@@ -24,16 +25,6 @@ export class ProductVariantDiscountService {
         return this.repo.findOne({where: {id}})
     }
 
-    findOneByProductVariantId(productVariantId: number) {
-        return this.repo.findOne({
-            where: {
-                productVariant: {
-                    id: productVariantId
-                }
-            }
-        })
-    }
-
     update(id: number, dto: UpdateProductVariantDiscountDto) {
         return this.repo.update(id, dto)
     }
@@ -48,5 +39,33 @@ export class ProductVariantDiscountService {
                 id: productVariantId
             }
         })
+    }
+
+    findOneByProductVariantId(productVariantId: number) {
+        return this.repo.findOne({
+            where: {
+                productVariant: {
+                    id: productVariantId
+                }
+            }
+        })
+    }
+
+    async createOrUpdateByProductVariant(
+        productVariant: ProductVariantEntity,
+        discount: {
+            discountPercent: number
+            endDate?: Date
+        }
+    ) {
+        const selectedDiscount = await this.findOneByProductVariantId(productVariant.id)
+        if (selectedDiscount) {
+            await this.update(selectedDiscount.id, discount)
+        } else {
+            await this.create({
+                ...discount,
+                productVariant: productVariant
+            })
+        }
     }
 }

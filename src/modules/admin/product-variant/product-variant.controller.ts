@@ -39,12 +39,32 @@ export class ProductVariantController {
         return this.productVariantService.findAll(filterProductVariantDto)
     }
 
+    @Get(":id/variants")
+    @ApiOperation({summary: "Get other product variants by product_variant_id"})
+    @ApiResponse({
+        status: 200,
+        description: "List of other product variants",
+        type: ProductVariantEntity,
+        isArray: true
+    })
+    findOtherVariants(@Param("id") id: string) {
+        return this.productVariantService.findProductVariantsByProductVariantId(+id)
+    }
+
     @Get(":id")
     findOne(@Param("id") id: string) {
         return this.productVariantService.findOne(+id)
     }
 
-    @Patch(":id")
+    @Post(":id")
+    @ApiOperation({summary: "Update product variant"})
+    @ApiBody({type: UpdateProductVariantDto})
+    @UsePipes(new ValidationPipe({transform: true}))
+    @ApiResponse({
+        status: 200,
+        description: "Updated product variant",
+        type: ProductVariantEntity
+    })
     update(@Param("id") id: string, @Body() updateProductVariantDto: UpdateProductVariantDto) {
         return this.productVariantService.update(+id, updateProductVariantDto)
     }

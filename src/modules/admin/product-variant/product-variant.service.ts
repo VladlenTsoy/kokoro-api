@@ -1,16 +1,16 @@
 import {Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductVariantDto} from "./dto/create-product-variant.dto"
 import {InjectRepository} from "@nestjs/typeorm"
-import {Repository} from "typeorm"
+import {Not, Repository} from "typeorm"
 import {ProductVariantEntity} from "./entities/product-variant.entity"
 import {ProductService} from "../product/product.service"
 import {ProductVariantSizeService} from "../product-variant-size/product-variant-size.service"
 import {ProductVariantImageService} from "../product-variant-image/product-variant-image.service"
-import {AwsService} from "../aws/aws.service"
 import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
 import {ProductTagService} from "../product-tag/product-tag.service"
 import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
 import {ProductVariantDiscountService} from "../product-variant-discount/product-variant-discount.service"
+import {ProductVariantMeasurementService} from "../product-variant-measurement/product-variant-measurement.service"
 
 @Injectable()
 export class ProductVariantService {
@@ -20,9 +20,9 @@ export class ProductVariantService {
         private readonly productService: ProductService,
         private readonly productSizeService: ProductVariantSizeService,
         private readonly productVariantImageService: ProductVariantImageService,
-        private readonly awsService: AwsService,
         private readonly productTagService: ProductTagService,
-        private readonly productDiscountService: ProductVariantDiscountService
+        private readonly productDiscountService: ProductVariantDiscountService,
+        private readonly productVariantMeasurementService: ProductVariantMeasurementService
     ) {}
 
     async create(createProductVariantDto: CreateProductVariantDto) {
@@ -32,8 +32,9 @@ export class ProductVariantService {
         const statusId = createProductVariantDto?.status_id
         const storageId = createProductVariantDto?.storage_id
         const tags = createProductVariantDto?.tags
-        const productProperties = createProductVariantDto?.productProperties
+        const productProperties = createProductVariantDto?.product_properties
         const discount = createProductVariantDto?.discount
+        const measurements = createProductVariantDto?.measurements
         const isNew = createProductVariantDto?.is_new
 
         // Check product_id, if it doesn't exist, create it
@@ -62,62 +63,35 @@ export class ProductVariantService {
         await this.productVariantRepository.save(productVariant)
 
         // Create discount
-        if (discount && discount.discountPercent > 0) {
-            const selectedDiscount = await this.productDiscountService.findOneByProductVariantId(productVariant.id)
-            if (selectedDiscount) {
-                await this.productDiscountService.update(selectedDiscount.id, {
-                    discountPercent: discount.discountPercent,
-                    endDate: discount.endDate
-                })
-            } else {
-                await this.productDiscountService.create({
-                    discountPercent: discount.discountPercent,
-                    endDate: discount.endDate,
-                    productVariant: productVariant
-                })
-            }
+        if (discount && discount.discount_percent > 0) {
+            await this.productDiscountService.createOrUpdateByProductVariant(productVariant, {
+                discountPercent: discount.discount_percent,
+                endDate: discount.end_date
+            })
         } else {
             await this.productDiscountService.removeByProductVariantId(productVariant.id)
         }
 
+        // Create product measurementS
+        await this.productVariantMeasurementService.updateOrDeleteByProductVariant(productVariant, measurements)
+
         // Create product sizes
-        await Promise.all(
-            createProductVariantDto.product_sizes.map(async (productSize) => {
-                await this.productSizeService.create({
-                    ...productSize,
-                    cost_price: productSize.cost_price || 0,
-                    product_variant_id: productVariant.id
-                })
-            })
+        await this.productSizeService.updateOrDeleteByProductVariantId(
+            productVariant.id,
+            createProductVariantDto.product_sizes
         )
 
         // Move images and Create product images
         if (createProductVariantDto.product_images && createProductVariantDto.product_images.length) {
-            // Move images from tmp folder
-            const images = await Promise.all(
-                createProductVariantDto.product_images.map(async (productImage) => {
-                    const newPath = `kokoro/${productVariant.id}/${productImage.name}`
-                    await this.awsService.moveFile(productImage.key, newPath)
-
-                    return {...productImage, path: newPath}
-                })
-            )
-            //Create product image
-            await Promise.all(
-                images.map(async (image, key) => {
-                    await this.productVariantImageService.create({
-                        ...image,
-                        position: image.position || key + 1,
-                        product_variant_id: productVariant.id
-                    })
-                })
+            await this.productVariantImageService.updateOrDeleteByVariantId(
+                productVariant.id,
+                createProductVariantDto.product_images
             )
         }
 
         return productVariant
     }
 
-    // Внутри сервиса (замените старую функцию applyFilters и/или findAll на эту реализацию)
     async findAll(filter: FilterProductVariantDto) {
         const page = Number(filter.page) > 0 ? Number(filter.page) : 1
         const pageSize = Number(filter.pageSize) > 0 ? Number(filter.pageSize) : 20
@@ -254,6 +228,7 @@ export class ProductVariantService {
             ])
             .orderBy("productVariant.id", "ASC")
             .addOrderBy("size.id", "ASC")
+            .addOrderBy("images.position", "ASC")
             .getMany()
 
         const orderMap = new Map(ids.map((id, idx) => [id, idx]))
@@ -272,6 +247,8 @@ export class ProductVariantService {
             .leftJoinAndSelect("sizes.size", "size")
             .leftJoinAndSelect("productVariant.images", "images")
             .leftJoinAndSelect("productVariant.status", "status")
+            .leftJoinAndSelect("productVariant.measurements", "measurements")
+            .leftJoinAndSelect("product.properties", "properties")
             .where("productVariant.id = :id", {id})
             .select([
                 "productVariant.id",
@@ -284,6 +261,7 @@ export class ProductVariantService {
 
                 // category_id из product
                 "product.category_id",
+                "product.id",
 
                 "sizes.id",
                 "sizes.qty",
@@ -296,6 +274,12 @@ export class ProductVariantService {
                 "discount.discountPercent",
                 "discount.endDate",
 
+                "measurements.id",
+                "measurements.title",
+                "measurements.descriptions",
+
+                "properties.id",
+
                 "images.id",
                 "images.name",
                 "images.path",
@@ -303,6 +287,7 @@ export class ProductVariantService {
                 "images.size"
             ])
             .orderBy("size.id", "ASC")
+            .orderBy("images.position", "ASC")
             .getOne()
 
         if (!productVariant) throw new NotFoundException("The product variant was not found")
@@ -313,11 +298,50 @@ export class ProductVariantService {
         const productVariant = await this.productVariantRepository.findOneBy({id})
         if (!productVariant) throw new NotFoundException("The product variant was not found")
 
+        const discount = updateProductVariantDto?.discount
+        const measurements = updateProductVariantDto?.measurements
+        const productProperties = updateProductVariantDto?.product_properties
+        const categoryId = updateProductVariantDto?.category_id
+        const productId = updateProductVariantDto?.product_id
+
         if (updateProductVariantDto.title !== undefined) productVariant.title = updateProductVariantDto.title
         if (updateProductVariantDto.price !== undefined) productVariant.price = updateProductVariantDto.price
         if (updateProductVariantDto.color_id !== undefined) productVariant.color_id = updateProductVariantDto.color_id
-        if (updateProductVariantDto.product_id !== undefined)
-            productVariant.product_id = updateProductVariantDto.product_id
+        if (updateProductVariantDto.status_id !== undefined)
+            productVariant.status_id = updateProductVariantDto.status_id
+        if (updateProductVariantDto.storage_id !== undefined)
+            productVariant.storage_id = updateProductVariantDto.storage_id
+        if (updateProductVariantDto.is_new !== undefined) productVariant.is_new = updateProductVariantDto.is_new
+
+        // Product
+        await this.productService.update(productId, {
+            category_id: categoryId,
+            properties: productProperties
+        })
+
+        // Move images and Create product images
+        if (updateProductVariantDto.product_images && updateProductVariantDto.product_images.length) {
+            await this.productVariantImageService.updateOrDeleteByVariantId(id, updateProductVariantDto.product_images)
+        }
+
+        // Discount
+        if (discount && discount.discount_percent > 0) {
+            await this.productDiscountService.createOrUpdateByProductVariant(productVariant, {
+                discountPercent: discount.discount_percent,
+                endDate: discount.end_date
+            })
+        } else {
+            await this.productDiscountService.removeByProductVariantId(productVariant.id)
+        }
+
+        // Measurements
+        await this.productVariantMeasurementService.updateOrDeleteByProductVariant(productVariant, measurements)
+
+        // Sizes
+        await this.productSizeService.updateOrDeleteByProductVariantId(
+            productVariant.id,
+            updateProductVariantDto.product_sizes
+        )
 
         return this.productVariantRepository.save(productVariant)
     }
@@ -329,5 +353,31 @@ export class ProductVariantService {
         await this.productVariantImageService.removeByProductVariantId(id)
         await this.productVariantRepository.delete(id)
         return {message: "Product variant has been successfully removed"}
+    }
+
+    async findProductVariantsByProductVariantId(id: number) {
+        const variant = await this.productVariantRepository.findOne({where: {id}})
+
+        return await this.productVariantRepository.find({
+            where: {
+                product_id: variant.product_id,
+                id: Not(variant.id)
+            },
+            select: {
+                id: true,
+                title: true,
+                color: {
+                    id: true,
+                    title: true,
+                    hex: true
+                }
+            },
+            relations: {
+                color: true
+            },
+            order: {
+                id: "ASC"
+            }
+        })
     }
 }

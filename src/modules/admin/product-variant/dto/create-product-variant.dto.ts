@@ -13,6 +13,16 @@ import {ApiProperty} from "@nestjs/swagger"
 import {Type} from "class-transformer"
 
 export class ProductSizeDto {
+    @IsOptional()
+    @IsNumber()
+    @IsPositive()
+    @ApiProperty({
+        example: 1,
+        description: "The id of the product size",
+        required: false
+    })
+    id?: number
+
     @IsNotEmpty()
     @IsNumber()
     @IsPositive()
@@ -52,6 +62,14 @@ export class ProductSizeDto {
 }
 
 export class ProductImageDto {
+    @IsNumber()
+    @IsOptional()
+    @ApiProperty({
+        example: "Product variant image id",
+        description: "The id of the product_variant_image"
+    })
+    id?: number
+
     @IsString()
     @ApiProperty({
         example: "Product variant image name",
@@ -82,30 +100,56 @@ export class ProductImageDto {
         description: "The position of the product_variant_image",
         required: false
     })
-    position: number
+    position?: number
 
-    @IsString()
+    @IsOptional()
+    @IsBoolean()
     @ApiProperty({
-        example: "Product variant image key",
-        description: "The key of the product_variant_image"
+        example: true,
+        description: "The to_delete of the product_variant_image",
+        required: false
     })
-    key: string
+    to_delete?: boolean
 }
 
 export class ProductDiscountDto {
     @IsString()
     @ApiProperty({
-        example: "Product variant discountPercent",
-        description: "The discountPercent of the product_variant_discount"
+        example: "Product variant discount_percent",
+        description: "The discount_percent of the product_variant_discount"
     })
-    discountPercent: number
+    discount_percent: number
 
     @IsDateString()
     @ApiProperty({
-        example: "Product variant discount endDate",
-        description: "The endDate of the product_variant_discount"
+        example: "Product variant discount end_date",
+        description: "The end_date of the product_variant_discount"
     })
-    endDate: Date
+    end_date: Date
+}
+
+export class ProductMeasurementDto {
+    @IsNumber()
+    @IsOptional()
+    @ApiProperty({
+        example: "Product variant id measurement",
+        description: "The id of the product_variant_measurements"
+    })
+    id?: number
+
+    @IsString()
+    @ApiProperty({
+        example: "Product variant title measurement",
+        description: "The title of the product_variant_measurements"
+    })
+    title: string
+
+    @IsArray()
+    @ApiProperty({
+        example: "Product variant descriptions measurement",
+        description: "The descriptions of the product_variant_measurements"
+    })
+    descriptions: Record<number, string>[]
 }
 
 export class CreateProductVariantDto {
@@ -141,7 +185,7 @@ export class CreateProductVariantDto {
     @ApiProperty({type: [Number], description: "Список ID свойств продукта"})
     @IsOptional()
     @IsArray()
-    productProperties?: number[]
+    product_properties?: number[]
 
     @IsNumber()
     @IsPositive()
@@ -219,9 +263,18 @@ export class CreateProductVariantDto {
     @ApiProperty({
         type: [ProductDiscountDto],
         description: "The product_discount of the product variant",
-        required: true
+        required: false
     })
     discount: ProductDiscountDto
+
+    @Type(() => ProductMeasurementDto)
+    @IsOptional()
+    @ApiProperty({
+        type: [ProductMeasurementDto],
+        description: "The measurements of the product variant",
+        required: false
+    })
+    measurements: ProductMeasurementDto[]
 
     @ApiProperty({type: [Number], description: "List id tags"})
     @IsOptional()
