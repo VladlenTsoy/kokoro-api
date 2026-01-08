@@ -1,4 +1,4 @@
-import {Injectable, NotFoundException} from "@nestjs/common"
+import {Injectable} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {ProductVariantImageEntity} from "./entities/product-variant-image.entity"
 import {Repository} from "typeorm"

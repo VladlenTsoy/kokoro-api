@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Post, UsePipes, ValidationPipe} from "@nestjs/common"
 import {ProductVariantService} from "./product-variant.service"
 import {CreateProductVariantDto} from "./dto/create-product-variant.dto"
 import {UpdateProductVariantDto} from "./dto/update-product-variant.dto"
