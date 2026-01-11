@@ -228,7 +228,7 @@ export class CreateProductVariantDto {
     status_id: number
 
     @IsBoolean()
-    @IsNotEmpty()
+    @IsOptional()
     @ApiProperty({
         example: true,
         description: "The is_new of the product variant",
