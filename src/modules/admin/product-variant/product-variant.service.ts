@@ -11,7 +11,6 @@ import {ProductTagService} from "../product-tag/product-tag.service"
 import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
 import {ProductVariantDiscountService} from "../product-variant-discount/product-variant-discount.service"
 import {ProductVariantMeasurementService} from "../product-variant-measurement/product-variant-measurement.service"
-import {DataSource} from "typeorm"
 
 @Injectable()
 export class ProductVariantService {
