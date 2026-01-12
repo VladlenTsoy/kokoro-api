@@ -39,11 +39,16 @@ export class ProductVariantImageService {
     }
 
     async removeByProductVariantId(productVariantId: number) {
-        const productVariantImage = await this.productVariantImageRepository.findOneBy({
-            product_variant_id: productVariantId
+        const productVariantImages = await this.productVariantImageRepository.find({
+            where: {
+                product_variant_id: productVariantId
+            }
         })
-        if (productVariantImage?.path) await this.awsService.deleteFile(productVariantImage.path)
-        await this.productVariantImageRepository.delete(productVariantImage.id)
+
+        for (const image of productVariantImages) {
+            if (image?.path) await this.awsService.deleteFile(image.path)
+            await this.productVariantImageRepository.delete(image.id)
+        }
     }
 
     async updateOrDeleteByVariantId(productVariantId: number, productImages: ProductImageDto[]) {

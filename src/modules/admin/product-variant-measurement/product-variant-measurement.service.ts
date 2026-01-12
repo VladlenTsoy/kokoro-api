@@ -34,6 +34,10 @@ export class ProductVariantMeasurementService {
         return this.repo.delete(id)
     }
 
+    removeByProductVariant(productVariant: ProductVariantEntity) {
+        return this.repo.delete({productVariant})
+    }
+
     async updateOrDeleteByProductVariant(productVariant: ProductVariantEntity, measurements: ProductMeasurementDto[]) {
         const actualIds: number[] = []
         //

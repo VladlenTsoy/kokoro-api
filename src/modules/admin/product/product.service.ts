@@ -44,4 +44,8 @@ export class ProductService {
         // Save product
         return this.productRepository.save(product)
     }
+
+    async removeById(id: number) {
+        return await this.productRepository.delete({id})
+    }
 }

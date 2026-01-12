@@ -70,6 +70,11 @@ export class ProductVariantController {
     }
 
     @Delete(":id")
+    @ApiOperation({summary: "Delete product variant"})
+    @ApiResponse({
+        status: 200,
+        description: "Deleted product variant"
+    })
     remove(@Param("id") id: string) {
         return this.productVariantService.remove(+id)
     }

@@ -11,6 +11,7 @@ import {ProductTagService} from "../product-tag/product-tag.service"
 import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
 import {ProductVariantDiscountService} from "../product-variant-discount/product-variant-discount.service"
 import {ProductVariantMeasurementService} from "../product-variant-measurement/product-variant-measurement.service"
+import {DataSource} from "typeorm"
 
 @Injectable()
 export class ProductVariantService {
@@ -347,12 +348,40 @@ export class ProductVariantService {
     }
 
     async remove(id: number) {
-        const productVariant = await this.productVariantRepository.findOneBy({id})
-        if (!productVariant) throw new NotFoundException("The product variant was not found")
-        await this.productSizeService.removeByProductVariantId(id)
-        await this.productVariantImageService.removeByProductVariantId(id)
-        await this.productVariantRepository.delete(id)
-        return {message: "Product variant has been successfully removed"}
+        const productVariant = await this.productVariantRepository.findOne({
+            where: {id},
+            select: ["id", "product_id"]
+        })
+
+        if (!productVariant) {
+            throw new NotFoundException("The product variant was not found")
+        }
+
+        const productVariantId = productVariant.id
+        const productId = productVariant.product_id
+
+        // 1️⃣ удаляем зависимости
+        await this.productSizeService.removeByProductVariantId(productVariantId)
+        await this.productVariantMeasurementService.removeByProductVariant(productVariant)
+        await this.productVariantImageService.removeByProductVariantId(productVariantId)
+        await this.productDiscountService.removeByProductVariantId(productVariantId)
+
+        // 2️⃣ удаляем variant
+        await this.productVariantRepository.delete(productVariantId)
+
+        // 3️⃣ проверяем, остались ли еще варианты
+        const variantsCount = await this.productVariantRepository.count({
+            where: {product_id: productId}
+        })
+
+        // 4️⃣ если это был последний variant — удаляем product
+        if (variantsCount === 0) {
+            await this.productService.removeById(productId)
+        }
+
+        return {
+            message: "Product variant has been successfully removed"
+        }
     }
 
     async findProductVariantsByProductVariantId(id: number) {
