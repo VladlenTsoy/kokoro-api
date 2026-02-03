@@ -4,6 +4,7 @@ import {AppService} from "./app.service"
 import {TypeOrmModule} from "@nestjs/typeorm"
 import {ConfigModule} from "@nestjs/config"
 import {AdminModule} from "./modules/admin/admin.module"
+import {ClientModule} from "./modules/client/client.module"
 import {typeOrmAsyncConfig} from "./config/typeorm.config"
 
 @Module({
@@ -12,7 +13,8 @@ import {typeOrmAsyncConfig} from "./config/typeorm.config"
             isGlobal: true
         }),
         TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
-        AdminModule
+        AdminModule,
+        ClientModule
     ],
     controllers: [AppController],
     providers: [AppService]

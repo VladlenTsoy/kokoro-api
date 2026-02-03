@@ -385,6 +385,9 @@ export class ProductVariantService {
 
     async findProductVariantsByProductVariantId(id: number) {
         const variant = await this.productVariantRepository.findOne({where: {id}})
+        if (!variant) {
+            throw new NotFoundException("Product variant not found")
+        }
 
         return await this.productVariantRepository.find({
             where: {
@@ -404,6 +407,7 @@ export class ProductVariantService {
                 color: true
             },
             order: {
+                is_new: "DESC",
                 id: "ASC"
             }
         })

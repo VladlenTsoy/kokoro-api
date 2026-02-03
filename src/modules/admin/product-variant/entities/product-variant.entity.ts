@@ -146,4 +146,14 @@ export class ProductVariantEntity {
     })
     @OneToMany(() => ProductVariantMeasurementEntity, (measurement) => measurement.productVariant)
     measurements: ProductVariantDiscountEntity[]
+
+    @ApiProperty({
+        required: false,
+        description: "Other variants of the same product (client response only)"
+    })
+    related_variants?: Array<{
+        id: number
+        title: string
+        color: ColorEntity
+    }>
 }
