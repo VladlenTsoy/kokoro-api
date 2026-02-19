@@ -33,8 +33,7 @@ export class ClientProductCategoryService {
             id: Number(category.id),
             title: category.title,
             url: category.url,
-            parent_category_id:
-                category.parent_category_id === null ? null : Number(category.parent_category_id)
+            parent_category_id: category.parent_category_id === null ? null : Number(category.parent_category_id)
         }))
 
         const nodes = new Map<number, ClientCategoryTreeItem>()
