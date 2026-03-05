@@ -2,6 +2,7 @@ import {Injectable} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {ProductCategoryEntity} from "../../admin/product-category/entities/product-category.entity"
+import {ProductVariantEntity} from "../../admin/product-variant/entities/product-variant.entity"
 
 export interface ClientCategoryTreeItem {
     id: number
@@ -14,7 +15,9 @@ export interface ClientCategoryTreeItem {
 export class ClientProductCategoryService {
     constructor(
         @InjectRepository(ProductCategoryEntity)
-        private readonly productCategoryRepository: Repository<ProductCategoryEntity>
+        private readonly productCategoryRepository: Repository<ProductCategoryEntity>,
+        @InjectRepository(ProductVariantEntity)
+        private readonly productVariantRepository: Repository<ProductVariantEntity>
     ) {}
 
     async findAllWithSubCategories(): Promise<ClientCategoryTreeItem[]> {
@@ -35,6 +38,14 @@ export class ClientProductCategoryService {
             url: category.url,
             parent_category_id: category.parent_category_id === null ? null : Number(category.parent_category_id)
         }))
+        const activeCategoryRows = await this.productVariantRepository
+            .createQueryBuilder("pv")
+            .leftJoin("pv.product", "product")
+            .select("DISTINCT product.category_id", "category_id")
+            .where("pv.status_id = :statusId", {statusId: 2})
+            .andWhere("product.category_id IS NOT NULL")
+            .getRawMany<{category_id: number | string}>()
+        const activeCategoryIds = new Set(activeCategoryRows.map((row) => Number(row.category_id)).filter(Boolean))
 
         const nodes = new Map<number, ClientCategoryTreeItem>()
 
@@ -65,6 +76,22 @@ export class ClientProductCategoryService {
             }
         }
 
+        const pruneByActiveProducts = (node: ClientCategoryTreeItem): ClientCategoryTreeItem | null => {
+            const filteredChildren = node.sub_categories
+                .map((child) => pruneByActiveProducts(child))
+                .filter((child): child is ClientCategoryTreeItem => child !== null)
+
+            const hasActiveProducts = activeCategoryIds.has(node.id)
+            if (!hasActiveProducts && filteredChildren.length === 0) return null
+
+            return {
+                ...node,
+                sub_categories: filteredChildren
+            }
+        }
+
         return roots
+            .map((root) => pruneByActiveProducts(root))
+            .filter((root): root is ClientCategoryTreeItem => root !== null)
     }
 }
