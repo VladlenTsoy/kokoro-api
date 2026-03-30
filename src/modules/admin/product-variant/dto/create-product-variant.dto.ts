@@ -2,6 +2,7 @@ import {
     IsArray,
     IsBoolean,
     IsDateString,
+    IsInt,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -162,6 +163,15 @@ export class CreateProductVariantDto {
     })
     title: string
 
+    @IsString()
+    @IsOptional()
+    @ApiProperty({
+        example: "Product variant description",
+        description: "The description of the product variant",
+        required: false
+    })
+    description?: string
+
     @IsNumber()
     @IsPositive()
     @IsNotEmpty()
@@ -279,5 +289,12 @@ export class CreateProductVariantDto {
     @ApiProperty({type: [Number], description: "List id tags"})
     @IsOptional()
     @IsArray()
+    @IsInt({each: true})
     tags?: number[]
+
+    @ApiProperty({type: [Number], description: "List id collections", required: false})
+    @IsOptional()
+    @IsArray()
+    @IsInt({each: true})
+    collection_ids?: number[]
 }

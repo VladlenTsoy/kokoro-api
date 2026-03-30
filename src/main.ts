@@ -17,6 +17,16 @@ async function bootstrap() {
             "This documentation provides a detailed overview of our CRM system's API, offering essential information on authentication methods, available endpoints, and their usage. Here, you will find comprehensive examples of requests and responses, designed to facilitate the seamless integration of your application with our system."
         )
         .setVersion("1.0")
+        .addBearerAuth(
+            {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "JWT",
+                in: "header",
+                name: "Authorization"
+            },
+            "admin-bearer"
+        )
         .build()
 
     const document = SwaggerModule.createDocument(app, config)

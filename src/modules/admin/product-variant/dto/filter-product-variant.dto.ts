@@ -22,4 +22,16 @@ export class FilterProductVariantDto {
     @IsOptional()
     @IsString()
     statusId: string
+
+    @IsOptional()
+    @IsArray()
+    collectionIds: number[]
+
+    @IsOptional()
+    @IsArray()
+    salesPointIds: number[]
+
+    @IsOptional()
+    @IsArray()
+    storageIds: number[]
 }

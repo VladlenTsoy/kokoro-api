@@ -42,11 +42,36 @@ export class OrderService {
     }
 
     findAll() {
-        return this.repo.find({relations: ["status", "paymentMethod", "source", "deliveryType"]})
+        return this.repo.find({
+            relations: [
+                "status",
+                "paymentMethod",
+                "source",
+                "deliveryType",
+                "client",
+                "clientAddress",
+                "items",
+                "items.productVariant",
+                "items.size"
+            ]
+        })
     }
 
     findOne(id: number) {
-        return this.repo.findOne({where: {id}, relations: ["status", "paymentMethod", "source", "deliveryType"]})
+        return this.repo.findOne({
+            where: {id},
+            relations: [
+                "status",
+                "paymentMethod",
+                "source",
+                "deliveryType",
+                "client",
+                "clientAddress",
+                "items",
+                "items.productVariant",
+                "items.size"
+            ]
+        })
     }
 
     async update(id: number, dto: UpdateOrderDto) {
@@ -75,5 +100,33 @@ export class OrderService {
 
     remove(id: number) {
         return this.repo.delete(id)
+    }
+
+    async findAllForAdmin(page = 1, pageSize = 20) {
+        const safePage = Number(page) > 0 ? Number(page) : 1
+        const safePageSize = Number(pageSize) > 0 ? Number(pageSize) : 20
+        const skip = (safePage - 1) * safePageSize
+
+        const [items, total] = await this.repo.findAndCount({
+            relations: {
+                status: true,
+                paymentMethod: true,
+                source: true,
+                deliveryType: true,
+                client: true,
+                clientAddress: true,
+                items: {
+                    productVariant: true,
+                    size: true
+                }
+            },
+            order: {
+                id: "DESC"
+            },
+            skip,
+            take: safePageSize
+        })
+
+        return {items, total}
     }
 }

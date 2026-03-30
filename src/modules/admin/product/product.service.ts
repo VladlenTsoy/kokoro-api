@@ -40,7 +40,9 @@ export class ProductService {
         // Not found color
         if (!product) this.errorNotFound()
         // Required fields
-        product.category_id = updateProductDto.category_id
+        if (updateProductDto.category_id !== undefined) {
+            product.category_id = updateProductDto.category_id
+        }
         // Save product
         return this.productRepository.save(product)
     }

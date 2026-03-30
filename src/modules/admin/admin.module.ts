@@ -1,4 +1,5 @@
 import {Module} from "@nestjs/common"
+import {APP_GUARD} from "@nestjs/core"
 import {ProductVariantModule} from "./product-variant/product-variant.module"
 import {SizeModule} from "./size/size.module"
 import {ColorModule} from "./color/color.module"
@@ -24,6 +25,12 @@ import {OrderAddressModule} from "./order-address/order-address.module"
 import {OrderModule} from "./order/order.module"
 import {OrderItemModule} from "./order-item/order-item.module"
 import {ProductVariantStatusModule} from "./product-variant-status/product-variant-status.module"
+import {RoleModule} from "./role/role.module"
+import {EmployeeModule} from "./employee/employee.module"
+import {AuthModule} from "./auth/auth.module"
+import {AdminAuthGuard} from "./auth/guards/admin-auth.guard"
+import {AdminRolesGuard} from "./auth/guards/admin-roles.guard"
+import {CollectionModule} from "./collection/collection.module"
 
 @Module({
     imports: [
@@ -51,8 +58,22 @@ import {ProductVariantStatusModule} from "./product-variant-status/product-varia
         OrderModule,
         OrderItemModule,
         OrderStatusModule,
-        ProductVariantStatusModule
+        ProductVariantStatusModule,
+        RoleModule,
+        EmployeeModule,
+        AuthModule,
+        CollectionModule
     ],
-    providers: [AppService]
+    providers: [
+        AppService,
+        {
+            provide: APP_GUARD,
+            useClass: AdminAuthGuard
+        },
+        {
+            provide: APP_GUARD,
+            useClass: AdminRolesGuard
+        }
+    ]
 })
 export class AdminModule {}

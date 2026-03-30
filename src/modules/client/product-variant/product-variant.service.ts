@@ -270,11 +270,13 @@ export class ClientProductVariantService {
             .leftJoinAndSelect("sizes.size", "size")
             .leftJoinAndSelect("productVariant.images", "images")
             .leftJoinAndSelect("productVariant.measurements", "measurements")
+            .leftJoinAndSelect("productVariant.collections", "collections")
             .leftJoinAndSelect("product.properties", "properties")
             .where("productVariant.id = :id", {id})
             .select([
                 "productVariant.id",
                 "productVariant.title",
+                "productVariant.description",
                 "productVariant.price",
                 "productVariant.is_new",
                 "productVariant.status_id",
@@ -297,6 +299,8 @@ export class ClientProductVariantService {
                 "properties.id",
                 "properties.title",
                 "properties.description",
+                "collections.id",
+                "collections.title",
                 "images.id",
                 "images.name",
                 "images.path",

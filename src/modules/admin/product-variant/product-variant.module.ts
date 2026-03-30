@@ -10,6 +10,7 @@ import {AwsModule} from "../aws/aws.module"
 import {ProductTagModule} from "../product-tag/product-tag.module"
 import {ProductVariantDiscountModule} from "../product-variant-discount/product-variant-discount.module"
 import {ProductVariantMeasurementModule} from "../product-variant-measurement/product-variant-measurement.module"
+import {CollectionModule} from "../collection/collection.module"
 
 @Module({
     imports: [
@@ -20,7 +21,8 @@ import {ProductVariantMeasurementModule} from "../product-variant-measurement/pr
         AwsModule,
         ProductTagModule,
         ProductVariantDiscountModule,
-        ProductVariantMeasurementModule
+        ProductVariantMeasurementModule,
+        CollectionModule
     ],
     controllers: [ProductVariantController],
     providers: [ProductVariantService]

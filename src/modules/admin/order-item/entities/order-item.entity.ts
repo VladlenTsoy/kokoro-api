@@ -8,13 +8,13 @@ export class OrderItemEntity {
     @PrimaryGeneratedColumn()
     id: number
 
-    @ManyToOne(() => OrderEntity, {onDelete: "CASCADE"})
+    @ManyToOne(() => OrderEntity, (order) => order.items, {onDelete: "CASCADE"})
     order: OrderEntity
 
     @ManyToOne(() => ProductVariantEntity, {nullable: false})
     productVariant: ProductVariantEntity
 
-    @ManyToOne(() => ProductVariantSizeEntity, {nullable: false})
+    @ManyToOne(() => ProductVariantSizeEntity, {nullable: true})
     size: ProductVariantSizeEntity
 
     @Column({type: "int"})

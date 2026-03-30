@@ -11,6 +11,7 @@ import {ProductTagService} from "../product-tag/product-tag.service"
 import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
 import {ProductVariantDiscountService} from "../product-variant-discount/product-variant-discount.service"
 import {ProductVariantMeasurementService} from "../product-variant-measurement/product-variant-measurement.service"
+import {CollectionService} from "../collection/collection.service"
 
 @Injectable()
 export class ProductVariantService {
@@ -22,7 +23,8 @@ export class ProductVariantService {
         private readonly productVariantImageService: ProductVariantImageService,
         private readonly productTagService: ProductTagService,
         private readonly productDiscountService: ProductVariantDiscountService,
-        private readonly productVariantMeasurementService: ProductVariantMeasurementService
+        private readonly productVariantMeasurementService: ProductVariantMeasurementService,
+        private readonly collectionService: CollectionService
     ) {}
 
     async create(createProductVariantDto: CreateProductVariantDto) {
@@ -32,6 +34,7 @@ export class ProductVariantService {
         const statusId = createProductVariantDto?.status_id
         const storageId = createProductVariantDto?.storage_id
         const tags = createProductVariantDto?.tags
+        const collectionIds = createProductVariantDto?.collection_ids
         const productProperties = createProductVariantDto?.product_properties
         const discount = createProductVariantDto?.discount
         const measurements = createProductVariantDto?.measurements
@@ -46,6 +49,7 @@ export class ProductVariantService {
         // Create product variant
         const productVariant = this.productVariantRepository.create({
             title: createProductVariantDto.title,
+            description: createProductVariantDto.description,
             price: createProductVariantDto.price,
             product_id: productId,
             storage_id: storageId,
@@ -57,6 +61,11 @@ export class ProductVariantService {
         // Create product tags
         if (tags?.length) {
             productVariant.tags = await this.productTagService.findByIds(createProductVariantDto.tags)
+        }
+
+        // Create product collections
+        if (collectionIds?.length) {
+            productVariant.collections = await this.collectionService.findByIds(collectionIds)
         }
 
         // Save product variant
@@ -104,9 +113,17 @@ export class ProductVariantService {
 
         const applyFilters = (
             qb: any,
-            f: {search?: string; categoryIds?: number[]; sizeIds?: number[]; statusId: string}
+            f: {
+                search?: string
+                categoryIds?: number[]
+                sizeIds?: number[]
+                statusId: string
+                collectionIds?: number[]
+                salesPointIds?: number[]
+                storageIds?: number[]
+            }
         ) => {
-            const {search, categoryIds, sizeIds, statusId} = f
+            const {search, categoryIds, sizeIds, statusId, collectionIds, salesPointIds, storageIds} = f
 
             // 1) search by pv.title OR product.title
             if (search && String(search).trim() !== "") {
@@ -158,6 +175,24 @@ export class ProductVariantService {
                 qb.andWhere("size_filter.id IN (:...sizeIds)", {sizeIds})
             }
 
+            if (Array.isArray(collectionIds) && collectionIds.length > 0) {
+                if (!qb.expressionMap.aliases.some((a: any) => a.name === "collection_filter")) {
+                    qb.leftJoin("pv.collections", "collection_filter")
+                }
+                qb.andWhere("collection_filter.id IN (:...collectionIds)", {collectionIds})
+            }
+
+            if (Array.isArray(storageIds) && storageIds.length > 0) {
+                qb.andWhere("pv.storage_id IN (:...storageIds)", {storageIds})
+            }
+
+            if (Array.isArray(salesPointIds) && salesPointIds.length > 0) {
+                if (!qb.expressionMap.aliases.some((a: any) => a.name === "storage_filter")) {
+                    qb.leftJoin("product_storages", "storage_filter", "storage_filter.id = pv.storage_id")
+                }
+                qb.andWhere("storage_filter.salesPointId IN (:...salesPointIds)", {salesPointIds})
+            }
+
             // FILTER statusId
             if (statusId !== undefined && statusId !== null) {
                 qb.andWhere("pv.status_id = :statusId", {statusId})
@@ -172,7 +207,10 @@ export class ProductVariantService {
             search: filter.search,
             categoryIds: filter.categoryIds,
             sizeIds: filter.sizeIds,
-            statusId: filter.statusId
+            statusId: filter.statusId,
+            collectionIds: filter.collectionIds,
+            salesPointIds: filter.salesPointIds,
+            storageIds: filter.storageIds
         })
         const rawCount = await countQb.select("COUNT(DISTINCT pv.id)", "cnt").getRawOne()
         const total = parseInt(String(rawCount?.cnt ?? "0"), 10)
@@ -189,7 +227,10 @@ export class ProductVariantService {
             search: filter.search,
             categoryIds: filter.categoryIds,
             sizeIds: filter.sizeIds,
-            statusId: filter.statusId
+            statusId: filter.statusId,
+            collectionIds: filter.collectionIds,
+            salesPointIds: filter.salesPointIds,
+            storageIds: filter.storageIds
         })
 
         const rawIdRows = await idsQb.getRawMany()
@@ -205,11 +246,14 @@ export class ProductVariantService {
             .leftJoinAndSelect("sizes.size", "size")
             .leftJoinAndSelect("productVariant.images", "images")
             .leftJoinAndSelect("productVariant.status", "status")
+            .leftJoinAndSelect("productVariant.collections", "collections")
             .whereInIds(ids)
             .select([
                 "productVariant.id",
                 "productVariant.title",
+                "productVariant.description",
                 "productVariant.price",
+                "productVariant.storage_id",
                 "color.id",
                 "color.title",
                 "color.hex",
@@ -223,6 +267,8 @@ export class ProductVariantService {
                 "images.position",
                 "status.id",
                 "status.title",
+                "collections.id",
+                "collections.title",
                 "discount.discountPercent",
                 "discount.endDate"
             ])
@@ -248,11 +294,13 @@ export class ProductVariantService {
             .leftJoinAndSelect("productVariant.images", "images")
             .leftJoinAndSelect("productVariant.status", "status")
             .leftJoinAndSelect("productVariant.measurements", "measurements")
+            .leftJoinAndSelect("productVariant.collections", "collections")
             .leftJoinAndSelect("product.properties", "properties")
             .where("productVariant.id = :id", {id})
             .select([
                 "productVariant.id",
                 "productVariant.title",
+                "productVariant.description",
                 "productVariant.price",
                 "productVariant.color_id",
                 "productVariant.storage_id",
@@ -280,6 +328,9 @@ export class ProductVariantService {
 
                 "properties.id",
 
+                "collections.id",
+                "collections.title",
+
                 "images.id",
                 "images.name",
                 "images.path",
@@ -305,7 +356,9 @@ export class ProductVariantService {
         const productId = updateProductVariantDto?.product_id
 
         if (updateProductVariantDto.title !== undefined) productVariant.title = updateProductVariantDto.title
+        if (updateProductVariantDto.description !== undefined) productVariant.description = updateProductVariantDto.description
         if (updateProductVariantDto.price !== undefined) productVariant.price = updateProductVariantDto.price
+        if (updateProductVariantDto.product_id !== undefined) productVariant.product_id = updateProductVariantDto.product_id
         if (updateProductVariantDto.color_id !== undefined) productVariant.color_id = updateProductVariantDto.color_id
         if (updateProductVariantDto.status_id !== undefined)
             productVariant.status_id = updateProductVariantDto.status_id
@@ -313,8 +366,20 @@ export class ProductVariantService {
             productVariant.storage_id = updateProductVariantDto.storage_id
         if (updateProductVariantDto.is_new !== undefined) productVariant.is_new = updateProductVariantDto.is_new
 
+        if (updateProductVariantDto.tags !== undefined) {
+            productVariant.tags = updateProductVariantDto.tags.length
+                ? await this.productTagService.findByIds(updateProductVariantDto.tags)
+                : []
+        }
+
+        if (updateProductVariantDto.collection_ids !== undefined) {
+            productVariant.collections = updateProductVariantDto.collection_ids.length
+                ? await this.collectionService.findByIds(updateProductVariantDto.collection_ids)
+                : []
+        }
+
         // Product
-        await this.productService.update(productId, {
+        await this.productService.update(productId || productVariant.product_id, {
             category_id: categoryId,
             properties: productProperties
         })

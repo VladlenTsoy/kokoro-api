@@ -19,6 +19,7 @@ import {ProductTagEntity} from "../../product-tag/entities/product-tag.entity"
 import {ProductVariantDiscountEntity} from "../../product-variant-discount/entities/product-variant-discount.entity"
 import {ProductVariantMeasurementEntity} from "../../product-variant-measurement/entities/product-variant-measurement.entity"
 import {ProductVariantStatusEntity} from "../../product-variant-status/entities/product-variant-status.entity"
+import {CollectionEntity} from "../../collection/entities/collection.entity"
 
 @Entity("product_variants")
 export class ProductVariantEntity {
@@ -37,6 +38,14 @@ export class ProductVariantEntity {
     })
     @Column({type: "varchar", length: 50})
     title: string
+
+    @ApiProperty({
+        example: "Variant description",
+        description: "The description of the product variant",
+        required: false
+    })
+    @Column({type: "text", nullable: true})
+    description?: string
 
     @ApiProperty({
         example: 50000,
@@ -134,6 +143,20 @@ export class ProductVariantEntity {
         }
     })
     tags: ProductTagEntity[]
+
+    @ManyToMany(() => CollectionEntity, (collection) => collection.productVariants)
+    @JoinTable({
+        name: "collection_product_variants",
+        joinColumn: {
+            name: "product_variant_id",
+            referencedColumnName: "id"
+        },
+        inverseJoinColumn: {
+            name: "collection_id",
+            referencedColumnName: "id"
+        }
+    })
+    collections: CollectionEntity[]
 
     @ApiProperty({
         type: () => ProductVariantDiscountEntity
