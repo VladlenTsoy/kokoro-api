@@ -1,7 +1,7 @@
-import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common"
+import {BadRequestException, Injectable, NotFoundException, UnauthorizedException} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {DataSource, Repository} from "typeorm"
-import {CreateClientOrderDto} from "./dto/create-client-order.dto"
+import {CreateClientOrderClientDto, CreateClientOrderDto} from "./dto/create-client-order.dto"
 import {ClientEntity} from "../../admin/client/entities/client.entity"
 import {ClientAddressEntity} from "../../admin/client-address/entities/client-address.entity"
 import {OrderEntity} from "../../admin/order/entities/order.entity"
@@ -108,9 +108,20 @@ export class ClientOrderService {
         }
     }
 
-    async create(dto: CreateClientOrderDto) {
+    async create(dto: CreateClientOrderDto, authenticatedClientId?: number) {
         if (!dto.items?.length) {
             throw new BadRequestException("Order items are required")
+        }
+
+        const resolveGuestClientData = (guestClient?: CreateClientOrderClientDto) => {
+            if (!guestClient?.phone?.trim() || !guestClient?.name?.trim()) {
+                throw new BadRequestException("Client name and phone are required for guest checkout")
+            }
+
+            return {
+                phone: this.normalizePhone(guestClient.phone),
+                name: guestClient.name.trim()
+            }
         }
 
         const result = await this.dataSource.transaction(async (manager) => {
@@ -124,18 +135,34 @@ export class ClientOrderService {
             const deliveryRepository = manager.getRepository(DeliveryTypeEntity)
             const productVariantRepository = manager.getRepository(ProductVariantEntity)
 
-            const phone = this.normalizePhone(dto.client.phone)
-            let client = await clientRepository.findOne({where: {phone}})
+            let client: ClientEntity | null = null
+            let phone: string | null = null
+            let clientName: string | null = null
 
-            if (!client) {
-                client = clientRepository.create({
-                    name: dto.client.name.trim(),
-                    phone
-                })
-                client = await clientRepository.save(client)
-            } else if (client.name !== dto.client.name.trim()) {
-                client.name = dto.client.name.trim()
-                client = await clientRepository.save(client)
+            if (authenticatedClientId) {
+                client = await clientRepository.findOne({where: {id: authenticatedClientId}})
+                if (!client || !client.isActive) {
+                    throw new UnauthorizedException("Client is not active")
+                }
+
+                phone = client.phone || null
+                clientName = client.name
+            } else {
+                const guestClient = resolveGuestClientData(dto.client)
+                phone = guestClient.phone
+                clientName = guestClient.name
+                client = await clientRepository.findOne({where: {phone}})
+
+                if (!client) {
+                    client = clientRepository.create({
+                        name: guestClient.name,
+                        phone
+                    })
+                    client = await clientRepository.save(client)
+                } else if (client.name !== guestClient.name) {
+                    client.name = guestClient.name
+                    client = await clientRepository.save(client)
+                }
             }
 
             const locationHash = this.stableSerialize(dto.address.location || null)
@@ -224,7 +251,7 @@ export class ClientOrderService {
                 deliveryType,
                 total,
                 phone,
-                clientName: client.name,
+                clientName: clientName || client.name,
                 comment: dto.comment?.trim(),
                 client,
                 clientAddress

@@ -3,8 +3,9 @@ import {ClientProductVariantModule} from "./product-variant/product-variant.modu
 import {ClientProductCategoryModule} from "./product-category/product-category.module"
 import {ClientCollectionModule} from "./collection/collection.module"
 import {ClientOrderModule} from "./order/order.module"
+import {ClientAuthModule} from "./auth/client-auth.module"
 
 @Module({
-    imports: [ClientProductVariantModule, ClientProductCategoryModule, ClientCollectionModule, ClientOrderModule]
+    imports: [ClientAuthModule, ClientProductVariantModule, ClientProductCategoryModule, ClientCollectionModule, ClientOrderModule]
 })
 export class ClientModule {}

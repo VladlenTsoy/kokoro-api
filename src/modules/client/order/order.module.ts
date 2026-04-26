@@ -11,9 +11,12 @@ import {PaymentMethodEntity} from "../../admin/payment-method/entities/payment-m
 import {SourceEntity} from "../../admin/source/entities/source.entity"
 import {DeliveryTypeEntity} from "../../admin/delivery-type/entities/delivery-type.entity"
 import {ProductVariantEntity} from "../../admin/product-variant/entities/product-variant.entity"
+import {ClientAuthModule} from "../auth/client-auth.module"
+import {ClientOptionalAuthGuard} from "../auth/guards/client-optional-auth.guard"
 
 @Module({
     imports: [
+        ClientAuthModule,
         TypeOrmModule.forFeature([
             ClientEntity,
             ClientAddressEntity,
@@ -27,6 +30,6 @@ import {ProductVariantEntity} from "../../admin/product-variant/entities/product
         ])
     ],
     controllers: [ClientOrderController],
-    providers: [ClientOrderService]
+    providers: [ClientOrderService, ClientOptionalAuthGuard]
 })
 export class ClientOrderModule {}

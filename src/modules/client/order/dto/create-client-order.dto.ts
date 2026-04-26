@@ -2,7 +2,7 @@ import {ApiProperty} from "@nestjs/swagger"
 import {IsArray, IsInt, IsNotEmpty, IsOptional, IsString, Min, ValidateNested} from "class-validator"
 import {Type} from "class-transformer"
 
-class CreateClientOrderClientDto {
+export class CreateClientOrderClientDto {
     @ApiProperty({example: "John Doe"})
     @IsString()
     @IsNotEmpty()
@@ -40,10 +40,11 @@ class CreateClientOrderItemDto {
 }
 
 export class CreateClientOrderDto {
-    @ApiProperty({type: CreateClientOrderClientDto})
+    @ApiProperty({type: CreateClientOrderClientDto, required: false})
+    @IsOptional()
     @ValidateNested()
     @Type(() => CreateClientOrderClientDto)
-    client: CreateClientOrderClientDto
+    client?: CreateClientOrderClientDto
 
     @ApiProperty({type: CreateClientOrderAddressDto})
     @ValidateNested()
