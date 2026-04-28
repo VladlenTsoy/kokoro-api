@@ -5,11 +5,12 @@ import {ClientAuthService} from "./client-auth.service"
 import {ClientAuthCryptoService} from "./client-auth-crypto.service"
 import {ClientEntity} from "../../admin/client/entities/client.entity"
 import {ClientRefreshTokenEntity} from "./entities/client-refresh-token.entity"
+import {ClientPhoneVerificationEntity} from "./entities/client-phone-verification.entity"
 import {ClientAuthGuard} from "./guards/client-auth.guard"
 import {ClientOptionalAuthGuard} from "./guards/client-optional-auth.guard"
 
 @Module({
-    imports: [TypeOrmModule.forFeature([ClientEntity, ClientRefreshTokenEntity])],
+    imports: [TypeOrmModule.forFeature([ClientEntity, ClientRefreshTokenEntity, ClientPhoneVerificationEntity])],
     controllers: [ClientAuthController],
     providers: [ClientAuthService, ClientAuthCryptoService, ClientAuthGuard, ClientOptionalAuthGuard],
     exports: [ClientAuthCryptoService, ClientAuthGuard, ClientOptionalAuthGuard]

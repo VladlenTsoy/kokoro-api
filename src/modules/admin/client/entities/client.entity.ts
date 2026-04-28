@@ -14,21 +14,6 @@ export class ClientEntity {
     @Column({type: "varchar", length: 50, unique: true, nullable: true})
     phone?: string | null
 
-    @Column({type: "varchar", length: 64, unique: true, nullable: true})
-    telegramId?: string | null
-
-    @Column({type: "varchar", length: 255, nullable: true})
-    telegramUsername?: string | null
-
-    @Column({type: "varchar", length: 255, nullable: true})
-    telegramFirstName?: string | null
-
-    @Column({type: "varchar", length: 255, nullable: true})
-    telegramLastName?: string | null
-
-    @Column({type: "varchar", length: 1024, nullable: true})
-    telegramPhotoUrl?: string | null
-
     @Column({type: "datetime", nullable: true})
     lastLoginAt?: Date | null
 

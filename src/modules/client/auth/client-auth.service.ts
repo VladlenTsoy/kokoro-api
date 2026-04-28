@@ -1,19 +1,39 @@
-import {Injectable, UnauthorizedException} from "@nestjs/common"
+import {BadGatewayException, BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException} from "@nestjs/common"
+import {ConfigService} from "@nestjs/config"
 import {InjectRepository} from "@nestjs/typeorm"
 import {IsNull, MoreThan, Repository} from "typeorm"
 import {ClientEntity} from "../../admin/client/entities/client.entity"
 import {ClientAuthCryptoService} from "./client-auth-crypto.service"
 import {ClientRefreshTokenEntity} from "./entities/client-refresh-token.entity"
-import {LoginClientTelegramDto} from "./dto/login-client-telegram.dto"
+import {ClientPhoneVerificationEntity} from "./entities/client-phone-verification.entity"
+import {SendClientPhoneCodeDto} from "./dto/send-client-phone-code.dto"
+import {VerifyClientPhoneCodeDto} from "./dto/verify-client-phone-code.dto"
+
+type TelegramGatewayResponse = {
+    ok: boolean
+    result?: {
+        request_id: string
+        phone_number: string
+        request_cost?: number
+        remaining_balance?: number
+        delivery_status?: {status: string; updated_at: number}
+        verification_status?: {status: string; updated_at: number; code_entered?: string}
+        payload?: string
+    }
+    error?: string
+}
 
 @Injectable()
 export class ClientAuthService {
     constructor(
+        private readonly configService: ConfigService,
         private readonly clientAuthCryptoService: ClientAuthCryptoService,
         @InjectRepository(ClientEntity)
         private readonly clientRepository: Repository<ClientEntity>,
         @InjectRepository(ClientRefreshTokenEntity)
-        private readonly refreshTokenRepository: Repository<ClientRefreshTokenEntity>
+        private readonly refreshTokenRepository: Repository<ClientRefreshTokenEntity>,
+        @InjectRepository(ClientPhoneVerificationEntity)
+        private readonly phoneVerificationRepository: Repository<ClientPhoneVerificationEntity>
     ) {}
 
     private sanitizeClient(client: ClientEntity) {
@@ -21,20 +41,14 @@ export class ClientAuthService {
             id: client.id,
             name: client.name,
             phone: client.phone || null,
-            telegramId: client.telegramId || null,
-            telegramUsername: client.telegramUsername || null,
-            telegramFirstName: client.telegramFirstName || null,
-            telegramLastName: client.telegramLastName || null,
-            telegramPhotoUrl: client.telegramPhotoUrl || null,
             isActive: client.isActive,
             createdAt: client.createdAt,
             lastLoginAt: client.lastLoginAt || null
         }
     }
 
-    private buildClientName(dto: LoginClientTelegramDto) {
-        const fullName = [dto.first_name, dto.last_name].filter(Boolean).join(" ").trim()
-        return fullName || dto.username || `telegram_${dto.id}`
+    private normalizePhone(phone: string) {
+        return phone.replace(/\s+/g, "").trim()
     }
 
     private parseRefreshToken(rawRefreshToken: string) {
@@ -72,7 +86,7 @@ export class ClientAuthService {
     private async buildAuthResponse(client: ClientEntity) {
         const accessToken = this.clientAuthCryptoService.signClientToken({
             sub: client.id,
-            telegramId: client.telegramId || ""
+            phone: client.phone || ""
         })
         const refreshTokenData = await this.issueRefreshToken(client)
 
@@ -86,28 +100,140 @@ export class ClientAuthService {
         }
     }
 
-    async loginWithTelegram(dto: LoginClientTelegramDto) {
-        this.clientAuthCryptoService.verifyTelegramAuth(dto)
+    private getGatewayToken() {
+        const token = this.configService.get<string>("TELEGRAM_GATEWAY_API_TOKEN")
+        if (!token) {
+            throw new BadGatewayException("Telegram Gateway auth is not configured")
+        }
 
-        let client = await this.clientRepository.findOne({where: {telegramId: dto.id}})
+        return token
+    }
 
+    private getGatewayTtlSeconds() {
+        return Number(this.configService.get("TELEGRAM_GATEWAY_CODE_TTL_SECONDS", 600))
+    }
+
+    private async callTelegramGateway(method: "sendVerificationMessage" | "checkVerificationStatus", body: Record<string, any>) {
+        const response = await fetch(`https://gatewayapi.telegram.org/${method}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${this.getGatewayToken()}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        })
+
+        let data: TelegramGatewayResponse
+        try {
+            data = (await response.json()) as TelegramGatewayResponse
+        } catch {
+            throw new BadGatewayException("Telegram Gateway returned invalid response")
+        }
+
+        if (!response.ok || !data.ok || !data.result) {
+            throw new BadGatewayException(data.error || "Telegram Gateway request failed")
+        }
+
+        return data.result
+    }
+
+    async sendPhoneCode(dto: SendClientPhoneCodeDto) {
+        const phone = this.normalizePhone(dto.phoneNumber)
+        const ttlSeconds = this.getGatewayTtlSeconds()
+        const now = new Date()
+
+        const activeVerification = await this.phoneVerificationRepository.findOne({
+            where: {
+                phone,
+                consumedAt: IsNull(),
+                expiresAt: MoreThan(now)
+            },
+            order: {id: "DESC"}
+        })
+
+        if (activeVerification) {
+            const retryAfterSeconds = Math.max(Math.ceil((activeVerification.expiresAt.getTime() - now.getTime()) / 1000), 1)
+
+            return {
+                requestId: activeVerification.requestId,
+                phoneNumber: phone,
+                expiresInSeconds: retryAfterSeconds
+            }
+        }
+
+        const result = await this.callTelegramGateway("sendVerificationMessage", {
+            phone_number: phone,
+            code_length: Number(this.configService.get("TELEGRAM_GATEWAY_CODE_LENGTH", 4)),
+            ttl: ttlSeconds
+        })
+
+        const verification = this.phoneVerificationRepository.create({
+            requestId: result.request_id,
+            phone,
+            status: result.delivery_status?.status || "sent",
+            attempts: 0,
+            expiresAt: new Date(Date.now() + ttlSeconds * 1000),
+            gatewayResponse: result
+        })
+        await this.phoneVerificationRepository.save(verification)
+
+        return {
+            requestId: result.request_id,
+            phoneNumber: phone,
+            expiresInSeconds: ttlSeconds
+        }
+    }
+
+    async verifyPhoneCode(dto: VerifyClientPhoneCodeDto) {
+        const phone = this.normalizePhone(dto.phoneNumber)
+        const verification = await this.phoneVerificationRepository.findOne({
+            where: {
+                requestId: dto.requestId,
+                phone,
+                consumedAt: IsNull(),
+                expiresAt: MoreThan(new Date())
+            }
+        })
+
+        if (!verification) {
+            throw new BadRequestException("Verification request is invalid or expired")
+        }
+
+        const maxAttempts = Number(this.configService.get("TELEGRAM_GATEWAY_MAX_VERIFY_ATTEMPTS", 5))
+        if (verification.attempts >= maxAttempts) {
+            throw new HttpException("Maximum verification attempts exceeded", HttpStatus.TOO_MANY_REQUESTS)
+        }
+
+        verification.attempts += 1
+
+        const result = await this.callTelegramGateway("checkVerificationStatus", {
+            request_id: verification.requestId,
+            code: dto.code
+        })
+
+        verification.status = result.verification_status?.status || verification.status
+        verification.gatewayResponse = result
+
+        if (verification.status !== "code_valid") {
+            await this.phoneVerificationRepository.save(verification)
+            throw new UnauthorizedException("Invalid verification code")
+        }
+
+        verification.consumedAt = new Date()
+        await this.phoneVerificationRepository.save(verification)
+
+        let client = await this.clientRepository.findOne({where: {phone}})
         if (!client) {
             client = this.clientRepository.create({
-                name: this.buildClientName(dto),
-                telegramId: dto.id,
-                telegramUsername: dto.username || null,
-                telegramFirstName: dto.first_name || null,
-                telegramLastName: dto.last_name || null,
-                telegramPhotoUrl: dto.photo_url || null,
+                name: dto.name?.trim() || phone,
+                phone,
                 lastLoginAt: new Date(),
                 isActive: true
             })
         } else {
-            client.name = client.name || this.buildClientName(dto)
-            client.telegramUsername = dto.username || null
-            client.telegramFirstName = dto.first_name || null
-            client.telegramLastName = dto.last_name || null
-            client.telegramPhotoUrl = dto.photo_url || null
+            if (dto.name?.trim()) {
+                client.name = dto.name.trim()
+            }
             client.lastLoginAt = new Date()
         }
 

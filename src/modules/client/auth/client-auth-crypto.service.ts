@@ -1,10 +1,10 @@
 import {Injectable, UnauthorizedException} from "@nestjs/common"
 import {ConfigService} from "@nestjs/config"
-import {createHash, createHmac, pbkdf2Sync, randomBytes, timingSafeEqual} from "crypto"
+import {createHmac, pbkdf2Sync, randomBytes, timingSafeEqual} from "crypto"
 
 type ClientTokenPayload = {
     sub: number
-    telegramId: string
+    phone: string
     iat: number
     exp: number
 }
@@ -66,51 +66,11 @@ export class ClientAuthCryptoService {
             const now = Math.floor(Date.now() / 1000)
 
             if (payload.exp <= now) return null
-            if (!payload.sub || !payload.telegramId) return null
+            if (!payload.sub || !payload.phone) return null
 
             return payload
         } catch {
             return null
-        }
-    }
-
-    verifyTelegramAuth(payload: Record<string, any>) {
-        const hash = payload.hash
-        if (!hash || typeof hash !== "string") {
-            throw new UnauthorizedException("Telegram hash is missing")
-        }
-
-        const ttlSeconds = Number(this.configService.get("TELEGRAM_AUTH_MAX_AGE_SECONDS", 600))
-        const now = Math.floor(Date.now() / 1000)
-        const authDate = Number(payload.auth_date || 0)
-
-        if (!authDate || Number.isNaN(authDate)) {
-            throw new UnauthorizedException("Invalid Telegram auth date")
-        }
-
-        if (authDate > now + 60) {
-            throw new UnauthorizedException("Telegram auth date is in the future")
-        }
-
-        if (now - authDate > ttlSeconds) {
-            throw new UnauthorizedException("Telegram auth data is expired")
-        }
-
-        const dataCheckString = Object.keys(payload)
-            .filter((key) => key !== "hash" && payload[key] !== undefined && payload[key] !== null && payload[key] !== "")
-            .sort()
-            .map((key) => `${key}=${payload[key]}`)
-            .join("\n")
-
-        const secretKey = createHash("sha256").update(this.getTelegramBotToken()).digest()
-        const expectedHash = createHmac("sha256", secretKey).update(dataCheckString).digest("hex")
-
-        if (hash.length !== expectedHash.length) {
-            throw new UnauthorizedException("Invalid Telegram hash")
-        }
-
-        if (!timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(expectedHash, "hex"))) {
-            throw new UnauthorizedException("Invalid Telegram hash")
         }
     }
 
@@ -120,15 +80,6 @@ export class ClientAuthCryptoService {
 
     private getClientSecret() {
         return this.configService.get<string>("CLIENT_AUTH_SECRET", "kokoro-change-me-client-secret")
-    }
-
-    private getTelegramBotToken() {
-        const token = this.configService.get<string>("TELEGRAM_BOT_TOKEN")
-        if (!token) {
-            throw new UnauthorizedException("Telegram auth is not configured")
-        }
-
-        return token
     }
 
     private base64UrlEncode(value: string) {

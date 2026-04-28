@@ -26,7 +26,7 @@ export class ClientOptionalAuthGuard implements CanActivate {
 
         request.clientUser = {
             id: payload.sub,
-            telegramId: payload.telegramId
+            phone: payload.phone
         }
 
         return true
