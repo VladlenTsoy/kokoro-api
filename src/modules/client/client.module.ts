@@ -4,8 +4,16 @@ import {ClientProductCategoryModule} from "./product-category/product-category.m
 import {ClientCollectionModule} from "./collection/collection.module"
 import {ClientOrderModule} from "./order/order.module"
 import {ClientAuthModule} from "./auth/client-auth.module"
+import {ClientProfileModule} from "./profile/client-profile.module"
 
 @Module({
-    imports: [ClientAuthModule, ClientProductVariantModule, ClientProductCategoryModule, ClientCollectionModule, ClientOrderModule]
+    imports: [
+        ClientAuthModule,
+        ClientProfileModule,
+        ClientProductVariantModule,
+        ClientProductCategoryModule,
+        ClientCollectionModule,
+        ClientOrderModule
+    ]
 })
 export class ClientModule {}

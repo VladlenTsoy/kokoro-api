@@ -21,9 +21,19 @@ export class CreateOrderDto {
     @IsInt()
     deliveryTypeId?: number
 
+    @ApiProperty({required: false})
+    @IsOptional()
+    @IsInt()
+    assignedEmployeeId?: number
+
     @ApiProperty()
     @IsInt()
     total: number
+
+    @ApiProperty({required: false})
+    @IsOptional()
+    @IsInt()
+    deliveryPrice?: number
 
     @ApiProperty({required: false})
     @IsOptional()

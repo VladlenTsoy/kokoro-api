@@ -31,6 +31,8 @@ import {AuthModule} from "./auth/auth.module"
 import {AdminAuthGuard} from "./auth/guards/admin-auth.guard"
 import {AdminRolesGuard} from "./auth/guards/admin-roles.guard"
 import {CollectionModule} from "./collection/collection.module"
+import {AdminClientModule} from "./client/client.module"
+import {PromoCodeModule} from "./promo-code/promo-code.module"
 
 @Module({
     imports: [
@@ -62,7 +64,9 @@ import {CollectionModule} from "./collection/collection.module"
         RoleModule,
         EmployeeModule,
         AuthModule,
-        CollectionModule
+        CollectionModule,
+        AdminClientModule,
+        PromoCodeModule
     ],
     providers: [
         AppService,

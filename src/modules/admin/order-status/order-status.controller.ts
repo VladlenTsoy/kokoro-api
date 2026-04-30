@@ -3,6 +3,7 @@ import {OrderStatusService} from "./order-status.service"
 import {CreateOrderStatusDto} from "./dto/create-order-status.dto"
 import {UpdateOrderStatusDto} from "./dto/update-order-status.dto"
 import {ApiTags, ApiOperation, ApiParam} from "@nestjs/swagger"
+import {SetOrderStatusTransitionsDto} from "./dto/set-order-status-transitions.dto"
 
 @ApiTags("Order Statuses")
 @Controller("order-statuses")
@@ -26,6 +27,18 @@ export class OrderStatusController {
     @ApiParam({name: "id", type: Number})
     findOne(@Param("id") id: string) {
         return this.service.findOne(+id)
+    }
+
+    @Get(":id/transitions")
+    @ApiOperation({summary: "Получить разрешённые переходы статуса"})
+    transitions(@Param("id") id: string) {
+        return this.service.getTransitions(+id)
+    }
+
+    @Patch(":id/transitions")
+    @ApiOperation({summary: "Задать разрешённые переходы статуса"})
+    setTransitions(@Param("id") id: string, @Body() dto: SetOrderStatusTransitionsDto) {
+        return this.service.setTransitions(+id, dto)
     }
 
     @Patch(":id")

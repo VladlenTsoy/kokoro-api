@@ -11,9 +11,17 @@ import {DeliveryTypeEntity} from "../delivery-type/entities/delivery-type.entity
 import {ClientEntity} from "../client/entities/client.entity"
 import {ClientAddressEntity} from "../client-address/entities/client-address.entity"
 import {OrderItemEntity} from "../order-item/entities/order-item.entity"
+import {OrderStatusHistoryEntity} from "../order-status-history/entities/order-status-history.entity"
+import {OrderCommentEntity} from "./entities/order-comment.entity"
+import {EmployeeEntity} from "../employee/entities/employee.entity"
+import {OrderStatusTransitionEntity} from "../order-status/entities/order-status-transition.entity"
+import {OrderStatusNotificationModule} from "../order-status-notification/order-status-notification.module"
+import {ProductVariantSizeEntity} from "../product-variant-size/entities/product-variant-size.entity"
+import {ClientBonusTransactionEntity} from "../client/entities/client-bonus-transaction.entity"
 
 @Module({
     imports: [
+        OrderStatusNotificationModule,
         TypeOrmModule.forFeature([
             OrderEntity,
             OrderStatusEntity,
@@ -22,7 +30,13 @@ import {OrderItemEntity} from "../order-item/entities/order-item.entity"
             DeliveryTypeEntity,
             ClientEntity,
             ClientAddressEntity,
-            OrderItemEntity
+            OrderItemEntity,
+            OrderStatusHistoryEntity,
+            OrderCommentEntity,
+            EmployeeEntity,
+            OrderStatusTransitionEntity,
+            ProductVariantSizeEntity,
+            ClientBonusTransactionEntity
         ])
     ],
     controllers: [OrderController, AdminOrderController],

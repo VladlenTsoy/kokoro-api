@@ -37,6 +37,13 @@ class CreateClientOrderItemDto {
     @IsInt()
     @Min(1)
     qty: number
+
+    @ApiProperty({example: 12, required: false})
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    sizeId?: number
 }
 
 export class CreateClientOrderDto {
@@ -79,4 +86,16 @@ export class CreateClientOrderDto {
     @Type(() => Number)
     @IsInt()
     deliveryTypeId?: number
+
+    @ApiProperty({required: false, example: "WELCOME10"})
+    @IsOptional()
+    @IsString()
+    promoCode?: string
+
+    @ApiProperty({required: false, example: 10000})
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0)
+    bonusToSpend?: number
 }

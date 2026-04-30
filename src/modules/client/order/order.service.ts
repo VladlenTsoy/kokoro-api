@@ -1,16 +1,24 @@
-import {BadRequestException, Injectable, NotFoundException, UnauthorizedException} from "@nestjs/common"
+import {BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {DataSource, Repository} from "typeorm"
+import {randomBytes} from "crypto"
 import {CreateClientOrderClientDto, CreateClientOrderDto} from "./dto/create-client-order.dto"
 import {ClientEntity} from "../../admin/client/entities/client.entity"
 import {ClientAddressEntity} from "../../admin/client-address/entities/client-address.entity"
-import {OrderEntity} from "../../admin/order/entities/order.entity"
+import {OrderDeliveryStatus, OrderEntity, OrderPaymentStatus} from "../../admin/order/entities/order.entity"
 import {OrderItemEntity} from "../../admin/order-item/entities/order-item.entity"
 import {OrderStatusEntity} from "../../admin/order-status/entities/order-status.entity"
 import {PaymentMethodEntity} from "../../admin/payment-method/entities/payment-method.entity"
 import {SourceEntity} from "../../admin/source/entities/source.entity"
 import {DeliveryTypeEntity} from "../../admin/delivery-type/entities/delivery-type.entity"
 import {ProductVariantEntity} from "../../admin/product-variant/entities/product-variant.entity"
+import {OrderStatusHistoryEntity} from "../../admin/order-status-history/entities/order-status-history.entity"
+import {ProductVariantSizeEntity} from "../../admin/product-variant-size/entities/product-variant-size.entity"
+import {PromoCodeDiscountType, PromoCodeEntity} from "../../admin/promo-code/entities/promo-code.entity"
+import {
+    ClientBonusTransactionEntity,
+    ClientBonusTransactionType
+} from "../../admin/client/entities/client-bonus-transaction.entity"
 
 @Injectable()
 export class ClientOrderService {
@@ -19,7 +27,9 @@ export class ClientOrderService {
     constructor(
         private readonly dataSource: DataSource,
         @InjectRepository(OrderEntity)
-        private readonly orderRepository: Repository<OrderEntity>
+        private readonly orderRepository: Repository<OrderEntity>,
+        @InjectRepository(OrderStatusHistoryEntity)
+        private readonly historyRepository: Repository<OrderStatusHistoryEntity>
     ) {}
 
     private normalizePhone(phone: string) {
@@ -44,6 +54,32 @@ export class ClientOrderService {
         const base = this.cdnBaseUrl.endsWith("/") ? this.cdnBaseUrl : `${this.cdnBaseUrl}/`
         const cleanPath = path.startsWith("/") ? path.slice(1) : path
         return `${base}${cleanPath}`
+    }
+
+    private buildOrderNumber(orderId: number) {
+        return `KO-${String(orderId).padStart(6, "0")}`
+    }
+
+    private createOrderAccessToken() {
+        return randomBytes(32).toString("base64url")
+    }
+
+    private normalizePromoCode(code?: string) {
+        return code?.trim().toUpperCase() || null
+    }
+
+    private calculatePromoDiscount(promoCode: PromoCodeEntity, baseTotal: number) {
+        if (promoCode.discountType === PromoCodeDiscountType.PERCENT) {
+            return Math.round((baseTotal * promoCode.discountValue) / 100)
+        }
+
+        return Math.min(promoCode.discountValue, baseTotal)
+    }
+
+    private calculateBonusEarned(baseTotal: number) {
+        const percent = Number(process.env.CLIENT_ORDER_BONUS_PERCENT || 1)
+        if (percent <= 0) return 0
+        return Math.floor((baseTotal * percent) / 100)
     }
 
     private isDiscountActive(discount?: {startDate?: Date | null; endDate?: Date | null} | null) {
@@ -84,9 +120,24 @@ export class ClientOrderService {
 
         return {
             id: order.id,
+            orderNumber: order.orderNumber,
             total: order.total,
+            subtotal: order.subtotal,
+            discountTotal: order.discountTotal,
+            deliveryPrice: order.deliveryPrice,
+            promoCode: order.promoCode || null,
+            promoDiscount: order.promoDiscount || 0,
+            bonusSpent: order.bonusSpent || 0,
+            bonusEarned: order.bonusEarned || 0,
+            paymentStatus: order.paymentStatus,
+            deliveryStatus: order.deliveryStatus,
+            cancelReason: order.cancelReason || null,
+            accessToken: order.accessToken || null,
             createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
             status: order.status,
+            paymentMethod: order.paymentMethod || null,
+            deliveryType: order.deliveryType || null,
             client: order.client
                 ? {
                       id: order.client.id,
@@ -104,6 +155,15 @@ export class ClientOrderService {
                       location: order.clientAddress.location
                   }
                 : null,
+            histories: (order.histories || [])
+                .filter((history) => history.visibleForClient)
+                .map((history) => ({
+                    id: history.id,
+                    fromStatus: history.fromStatus || null,
+                    toStatus: history.toStatus,
+                    comment: history.comment || null,
+                    changedAt: history.changedAt
+                })),
             items: normalizedItems
         }
     }
@@ -130,10 +190,14 @@ export class ClientOrderService {
             const orderRepository = manager.getRepository(OrderEntity)
             const orderItemRepository = manager.getRepository(OrderItemEntity)
             const orderStatusRepository = manager.getRepository(OrderStatusEntity)
+            const historyRepository = manager.getRepository(OrderStatusHistoryEntity)
             const paymentRepository = manager.getRepository(PaymentMethodEntity)
             const sourceRepository = manager.getRepository(SourceEntity)
             const deliveryRepository = manager.getRepository(DeliveryTypeEntity)
             const productVariantRepository = manager.getRepository(ProductVariantEntity)
+            const productVariantSizeRepository = manager.getRepository(ProductVariantSizeEntity)
+            const promoCodeRepository = manager.getRepository(PromoCodeEntity)
+            const bonusTransactionRepository = manager.getRepository(ClientBonusTransactionEntity)
 
             let client: ClientEntity | null = null
             let phone: string | null = null
@@ -211,6 +275,7 @@ export class ClientOrderService {
             let total = 0
             const preparedItems: Array<{
                 variant: ProductVariantEntity
+                size: ProductVariantSizeEntity | null
                 qty: number
                 price: number
                 discount: number
@@ -220,7 +285,7 @@ export class ClientOrderService {
             for (const item of dto.items) {
                 const variant = await productVariantRepository.findOne({
                     where: {id: item.productVariantId},
-                    relations: {discount: true}
+                    relations: {discount: true, color: true, product: true, images: true, sizes: {size: true}}
                 })
 
                 if (!variant) {
@@ -234,9 +299,35 @@ export class ClientOrderService {
                 const finalUnitPrice = Math.max(basePrice - unitDiscount, 0)
                 const lineTotal = finalUnitPrice * item.qty
                 total += lineTotal
+                let selectedSize: ProductVariantSizeEntity | null = null
+                const availableSizes = variant.sizes || []
+
+                if (availableSizes.length) {
+                    if (!item.sizeId) {
+                        throw new BadRequestException(`Size is required for product variant ${item.productVariantId}`)
+                    }
+
+                    selectedSize = await productVariantSizeRepository.findOne({
+                        where: {id: item.sizeId},
+                        relations: {productVariant: true, size: true}
+                    })
+
+                    if (!selectedSize || selectedSize.productVariant.id !== variant.id) {
+                        throw new BadRequestException(`Size ${item.sizeId} is not available for product variant ${item.productVariantId}`)
+                    }
+
+                    const availableQty = Number(selectedSize.qty || 0) - Number(selectedSize.reservedQty || 0)
+                    if (availableQty < item.qty) {
+                        throw new BadRequestException(`Only ${Math.max(availableQty, 0)} item(s) left for selected size`)
+                    }
+
+                    selectedSize.reservedQty = Number(selectedSize.reservedQty || 0) + item.qty
+                    await productVariantSizeRepository.save(selectedSize)
+                }
 
                 preparedItems.push({
                     variant,
+                    size: selectedSize,
                     qty: item.qty,
                     price: basePrice,
                     discount: unitDiscount,
@@ -244,30 +335,128 @@ export class ClientOrderService {
                 })
             }
 
+            const subtotal = preparedItems.reduce((sum, item) => sum + item.price * item.qty, 0)
+            const discountTotal = preparedItems.reduce((sum, item) => sum + item.discount * item.qty, 0)
+            const deliveryPrice = Number(deliveryType?.price || 0)
+            const itemsTotal = Math.max(subtotal - discountTotal, 0)
+            let promoCode: PromoCodeEntity | null = null
+            let promoDiscount = 0
+            let bonusSpent = 0
+
+            const normalizedPromoCode = this.normalizePromoCode(dto.promoCode)
+            if (normalizedPromoCode) {
+                promoCode = await promoCodeRepository.findOne({where: {code: normalizedPromoCode}})
+                const now = Date.now()
+
+                if (!promoCode || !promoCode.isActive) {
+                    throw new BadRequestException("Promo code is not active")
+                }
+                if (promoCode.startsAt && new Date(promoCode.startsAt).getTime() > now) {
+                    throw new BadRequestException("Promo code is not active yet")
+                }
+                if (promoCode.endsAt && new Date(promoCode.endsAt).getTime() < now) {
+                    throw new BadRequestException("Promo code is expired")
+                }
+                if (promoCode.usageLimit && promoCode.usedCount >= promoCode.usageLimit) {
+                    throw new BadRequestException("Promo code usage limit exceeded")
+                }
+                if (itemsTotal < Number(promoCode.minOrderTotal || 0)) {
+                    throw new BadRequestException("Order total is too low for promo code")
+                }
+
+                promoDiscount = this.calculatePromoDiscount(promoCode, itemsTotal)
+                promoCode.usedCount = Number(promoCode.usedCount || 0) + 1
+                await promoCodeRepository.save(promoCode)
+            }
+
+            const afterPromoTotal = Math.max(itemsTotal - promoDiscount, 0)
+            if (dto.bonusToSpend && dto.bonusToSpend > 0) {
+                if (!authenticatedClientId) {
+                    throw new BadRequestException("Bonuses are available only for authorized clients")
+                }
+                if (Number(client.bonusBalance || 0) < dto.bonusToSpend) {
+                    throw new BadRequestException("Not enough bonuses")
+                }
+
+                bonusSpent = Math.min(dto.bonusToSpend, afterPromoTotal)
+                client.bonusBalance = Number(client.bonusBalance || 0) - bonusSpent
+                await clientRepository.save(client)
+            }
+
+            const bonusEarned = authenticatedClientId ? this.calculateBonusEarned(Math.max(afterPromoTotal - bonusSpent, 0)) : 0
+
             let order = orderRepository.create({
                 status: orderStatus,
                 paymentMethod,
                 source,
                 deliveryType,
-                total,
+                subtotal,
+                discountTotal,
+                deliveryPrice,
+                promoCode: promoCode?.code || null,
+                promoDiscount,
+                bonusSpent,
+                bonusEarned,
+                total: Math.max(afterPromoTotal - bonusSpent + deliveryPrice, 0),
                 phone,
                 clientName: clientName || client.name,
                 comment: dto.comment?.trim(),
                 client,
-                clientAddress
+                clientAddress,
+                accessToken: authenticatedClientId ? null : this.createOrderAccessToken(),
+                paymentStatus: OrderPaymentStatus.PENDING,
+                deliveryStatus: OrderDeliveryStatus.PENDING
             })
 
             order = await orderRepository.save(order)
+            order.orderNumber = this.buildOrderNumber(order.id)
+            order = await orderRepository.save(order)
+
+            await historyRepository.save(
+                historyRepository.create({
+                    order,
+                    fromStatus: null,
+                    toStatus: orderStatus,
+                    changedBy: "client",
+                    comment: "Order created",
+                    visibleForClient: true
+                })
+            )
+
+            if (bonusSpent > 0) {
+                await bonusTransactionRepository.save(
+                    bonusTransactionRepository.create({
+                        client,
+                        order,
+                        type: ClientBonusTransactionType.SPEND,
+                        amount: -bonusSpent,
+                        comment: "Bonuses spent on order"
+                    })
+                )
+            }
 
             for (const item of preparedItems) {
+                const images = [...(item.variant.images || [])].sort(
+                    (a: any, b: any) => Number(a?.position || 0) - Number(b?.position || 0)
+                )
+                const finalUnitPrice = Math.max(item.price - item.discount, 0)
                 const orderItem = orderItemRepository.create({
                     order,
                     productVariant: item.variant,
-                    size: null,
+                    size: item.size,
                     qty: item.qty,
                     price: item.price,
                     discount: item.discount,
-                    promotion: item.promotion
+                    promotion: item.promotion,
+                    productName: item.variant.product ? `Product #${item.variant.product.id}` : null,
+                    variantName: item.variant.title,
+                    sku: `PV-${item.variant.id}`,
+                    colorName: item.variant.color?.title || null,
+                    sizeName: item.size?.size?.title || null,
+                    imageUrl: images.length ? this.toFullImageUrl(images[0].path) : null,
+                    unitPrice: item.price,
+                    finalUnitPrice,
+                    lineTotal: finalUnitPrice * item.qty
                 })
 
                 await orderItemRepository.save(orderItem)
@@ -285,6 +474,10 @@ export class ClientOrderService {
                 deliveryType: true,
                 client: true,
                 clientAddress: true,
+                histories: {
+                    fromStatus: true,
+                    toStatus: true
+                },
                 items: {
                     productVariant: {
                         discount: true,
@@ -298,13 +491,50 @@ export class ClientOrderService {
         return this.enrichOrderForClient(order)
     }
 
-    async findOneForClient(id: number) {
+    async findAllForClient(clientId: number, page = 1, pageSize = 20) {
+        const safePage = Number(page) > 0 ? Number(page) : 1
+        const safePageSize = Number(pageSize) > 0 ? Math.min(Number(pageSize), 100) : 20
+        const [items, total] = await this.orderRepository.findAndCount({
+            where: {client: {id: clientId}},
+            relations: {
+                status: true,
+                paymentMethod: true,
+                deliveryType: true,
+                client: true,
+                clientAddress: true,
+                items: {
+                    productVariant: {
+                        images: true
+                    },
+                    size: true
+                }
+            },
+            order: {id: "DESC"},
+            skip: (safePage - 1) * safePageSize,
+            take: safePageSize
+        })
+
+        return {
+            items: items.map((order) => this.enrichOrderForClient(order)),
+            total,
+            page: safePage,
+            pageSize: safePageSize
+        }
+    }
+
+    async findOneForClient(id: number, authenticatedClientId?: number, accessToken?: string) {
         const order = await this.orderRepository.findOne({
             where: {id},
             relations: {
                 status: true,
+                paymentMethod: true,
+                deliveryType: true,
                 client: true,
                 clientAddress: true,
+                histories: {
+                    fromStatus: true,
+                    toStatus: true
+                },
                 items: {
                     productVariant: {
                         images: true
@@ -318,6 +548,107 @@ export class ClientOrderService {
             throw new NotFoundException("Order not found")
         }
 
+        const isOwner = authenticatedClientId && order.client?.id === authenticatedClientId
+        const isGuestWithToken = accessToken && order.accessToken && accessToken === order.accessToken
+
+        if (!isOwner && !isGuestWithToken) {
+            throw new ForbiddenException("Order is not available")
+        }
+
         return this.enrichOrderForClient(order)
+    }
+
+    async cancelForClient(id: number, authenticatedClientId: number | undefined, accessToken: string | undefined, reason?: string) {
+        const order = await this.orderRepository.findOne({
+            where: {id},
+            relations: {status: true, client: true}
+        })
+
+        if (!order) throw new NotFoundException("Order not found")
+        const isOwner = authenticatedClientId && order.client?.id === authenticatedClientId
+        const isGuestWithToken = accessToken && order.accessToken && accessToken === order.accessToken
+        if (!isOwner && !isGuestWithToken) throw new ForbiddenException("Order is not available")
+        if (order.deliveryStatus !== OrderDeliveryStatus.PENDING) {
+            throw new BadRequestException("Order can no longer be cancelled by client")
+        }
+
+        order.deliveryStatus = OrderDeliveryStatus.CANCELLED
+        order.cancelReason = reason || "Cancelled by client"
+        order.cancelledAt = new Date()
+        await this.orderRepository.save(order)
+        if (order.client && order.bonusSpent > 0) {
+            const clientRepository = this.dataSource.getRepository(ClientEntity)
+            const bonusTransactionRepository = this.dataSource.getRepository(ClientBonusTransactionEntity)
+            const client = await clientRepository.findOneBy({id: order.client.id})
+            if (client) {
+                client.bonusBalance = Number(client.bonusBalance || 0) + order.bonusSpent
+                await clientRepository.save(client)
+                await bonusTransactionRepository.save(
+                    bonusTransactionRepository.create({
+                        client,
+                        order,
+                        type: ClientBonusTransactionType.REFUND,
+                        amount: order.bonusSpent,
+                        comment: "Bonuses refunded after order cancellation"
+                    })
+                )
+            }
+        }
+        const items = await this.orderRepository.findOne({
+            where: {id},
+            relations: {items: {size: true}}
+        })
+        const sizeRepository = this.dataSource.getRepository(ProductVariantSizeEntity)
+        for (const item of items?.items || []) {
+            if (!item.size) continue
+            const variantSize = await sizeRepository.findOneBy({id: item.size.id})
+            if (!variantSize) continue
+            variantSize.reservedQty = Math.max(Number(variantSize.reservedQty || 0) - item.qty, 0)
+            await sizeRepository.save(variantSize)
+        }
+        await this.historyRepository.save(
+            this.historyRepository.create({
+                order,
+                fromStatus: order.status,
+                toStatus: order.status,
+                changedBy: "client",
+                comment: order.cancelReason,
+                visibleForClient: true
+            })
+        )
+
+        return this.findOneForClient(id, authenticatedClientId, accessToken)
+    }
+
+    async reorder(id: number, clientId: number) {
+        const order = await this.orderRepository.findOne({
+            where: {id, client: {id: clientId}},
+            relations: {
+                clientAddress: true,
+                paymentMethod: true,
+                deliveryType: true,
+                items: {
+                    productVariant: true
+                }
+            }
+        })
+
+        if (!order) throw new NotFoundException("Order not found")
+
+        return {
+            address: order.clientAddress
+                ? {
+                      address: order.clientAddress.address,
+                      location: order.clientAddress.location
+                  }
+                : null,
+            items: (order.items || []).map((item) => ({
+                productVariantId: item.productVariant.id,
+                qty: item.qty
+            })),
+            comment: order.comment || undefined,
+            paymentMethodId: order.paymentMethod?.id,
+            deliveryTypeId: order.deliveryType?.id
+        }
     }
 }

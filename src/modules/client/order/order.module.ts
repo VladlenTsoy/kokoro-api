@@ -13,10 +13,16 @@ import {DeliveryTypeEntity} from "../../admin/delivery-type/entities/delivery-ty
 import {ProductVariantEntity} from "../../admin/product-variant/entities/product-variant.entity"
 import {ClientAuthModule} from "../auth/client-auth.module"
 import {ClientOptionalAuthGuard} from "../auth/guards/client-optional-auth.guard"
+import {OrderStatusHistoryEntity} from "../../admin/order-status-history/entities/order-status-history.entity"
+import {ProductVariantSizeEntity} from "../../admin/product-variant-size/entities/product-variant-size.entity"
+import {PromoCodeEntity} from "../../admin/promo-code/entities/promo-code.entity"
+import {ClientBonusTransactionEntity} from "../../admin/client/entities/client-bonus-transaction.entity"
+import {PaymeModule} from "../../payme/payme.module"
 
 @Module({
     imports: [
         ClientAuthModule,
+        PaymeModule,
         TypeOrmModule.forFeature([
             ClientEntity,
             ClientAddressEntity,
@@ -26,7 +32,11 @@ import {ClientOptionalAuthGuard} from "../auth/guards/client-optional-auth.guard
             PaymentMethodEntity,
             SourceEntity,
             DeliveryTypeEntity,
-            ProductVariantEntity
+            ProductVariantEntity,
+            OrderStatusHistoryEntity,
+            ProductVariantSizeEntity,
+            PromoCodeEntity,
+            ClientBonusTransactionEntity
         ])
     ],
     controllers: [ClientOrderController],

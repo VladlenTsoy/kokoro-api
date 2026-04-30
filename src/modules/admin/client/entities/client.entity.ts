@@ -20,6 +20,9 @@ export class ClientEntity {
     @Column({type: "tinyint", default: true})
     isActive: boolean
 
+    @Column({type: "int", default: 0})
+    bonusBalance: number
+
     @OneToMany(() => ClientAddressEntity, (address) => address.client)
     addresses: ClientAddressEntity[]
 

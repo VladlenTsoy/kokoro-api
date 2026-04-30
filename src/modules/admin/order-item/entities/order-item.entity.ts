@@ -29,6 +29,33 @@ export class OrderItemEntity {
     @Column({type: "int", default: 0})
     discount: number
 
+    @Column({type: "varchar", length: 255, nullable: true})
+    productName?: string | null
+
+    @Column({type: "varchar", length: 255, nullable: true})
+    variantName?: string | null
+
+    @Column({type: "varchar", length: 64, nullable: true})
+    sku?: string | null
+
+    @Column({type: "varchar", length: 50, nullable: true})
+    colorName?: string | null
+
+    @Column({type: "varchar", length: 50, nullable: true})
+    sizeName?: string | null
+
+    @Column({type: "varchar", length: 1024, nullable: true})
+    imageUrl?: string | null
+
+    @Column({type: "int", default: 0})
+    unitPrice: number
+
+    @Column({type: "int", default: 0})
+    finalUnitPrice: number
+
+    @Column({type: "int", default: 0})
+    lineTotal: number
+
     @CreateDateColumn()
     createdAt: Date
 }

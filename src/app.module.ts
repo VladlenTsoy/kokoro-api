@@ -6,6 +6,7 @@ import {ConfigModule} from "@nestjs/config"
 import {AdminModule} from "./modules/admin/admin.module"
 import {ClientModule} from "./modules/client/client.module"
 import {typeOrmAsyncConfig} from "./config/typeorm.config"
+import {PaymeModule} from "./modules/payme/payme.module"
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import {typeOrmAsyncConfig} from "./config/typeorm.config"
             isGlobal: true
         }),
         TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
+        PaymeModule,
         AdminModule,
         ClientModule
     ],

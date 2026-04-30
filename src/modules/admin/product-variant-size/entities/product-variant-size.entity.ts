@@ -46,6 +46,22 @@ export class ProductVariantSizeEntity {
     qty: number
 
     @ApiProperty({
+        example: 5,
+        description: "Quantity reserved by active orders",
+        required: true
+    })
+    @Column({type: "int", default: 0})
+    reservedQty: number
+
+    @ApiProperty({
+        example: 20,
+        description: "Quantity sold through completed orders",
+        required: true
+    })
+    @Column({type: "int", default: 0})
+    soldQty: number
+
+    @ApiProperty({
         example: 10,
         description: "The min_qty of the product size",
         required: true
@@ -64,4 +80,8 @@ export class ProductVariantSizeEntity {
     @ManyToOne(() => SizeEntity)
     @JoinColumn({name: "size_id"})
     size: SizeEntity
+
+    get availableQty(): number {
+        return Math.max(Number(this.qty || 0) - Number(this.reservedQty || 0), 0)
+    }
 }

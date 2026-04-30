@@ -21,6 +21,18 @@ export class OrderStatusNotificationController {
         return this.service.findAll()
     }
 
+    @Get("logs")
+    @ApiOperation({summary: "Получить журнал уведомлений по заказам"})
+    logs() {
+        return this.service.findLogs()
+    }
+
+    @Get("logs/order/:orderId")
+    @ApiOperation({summary: "Получить журнал уведомлений заказа"})
+    orderLogs(@Param("orderId") orderId: string) {
+        return this.service.findLogs(+orderId)
+    }
+
     @Get(":id")
     @ApiOperation({summary: "Получить уведомление по ID"})
     @ApiParam({name: "id", type: Number})

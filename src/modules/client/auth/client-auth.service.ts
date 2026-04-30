@@ -41,6 +41,7 @@ export class ClientAuthService {
             id: client.id,
             name: client.name,
             phone: client.phone || null,
+            bonusBalance: client.bonusBalance || 0,
             isActive: client.isActive,
             createdAt: client.createdAt,
             lastLoginAt: client.lastLoginAt || null
