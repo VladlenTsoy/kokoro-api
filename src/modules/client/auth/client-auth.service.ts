@@ -115,24 +115,29 @@ export class ClientAuthService {
     }
 
     private async callTelegramGateway(method: "sendVerificationMessage" | "checkVerificationStatus", body: Record<string, any>) {
-        const response = await fetch(`https://gatewayapi.telegram.org/${method}`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${this.getGatewayToken()}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-        })
+        let response: Response
+        try {
+            response = await fetch(`https://gatewayapi.telegram.org/${method}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${this.getGatewayToken()}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
+            })
+        } catch (err: any) {
+            throw new BadGatewayException(`Telegram Gateway is unavailable: ${err?.message || "request failed"}`)
+        }
 
         let data: TelegramGatewayResponse
         try {
             data = (await response.json()) as TelegramGatewayResponse
         } catch {
-            throw new BadGatewayException("Telegram Gateway returned invalid response")
+            throw new BadGatewayException(`Telegram Gateway returned invalid response with status ${response.status}`)
         }
 
         if (!response.ok || !data.ok || !data.result) {
-            throw new BadGatewayException(data.error || "Telegram Gateway request failed")
+            throw new BadGatewayException(data.error || `Telegram Gateway request failed with status ${response.status}`)
         }
 
         return data.result
