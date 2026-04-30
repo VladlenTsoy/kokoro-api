@@ -4,4 +4,5 @@ export type AdminAuthenticatedUser = {
     firstName: string
     lastName: string
     roleCodes: string[]
+    permissions: string[]
 }

@@ -4,7 +4,7 @@ import {RoleService} from "./role.service"
 import {CreateRoleDto} from "./dto/create-role.dto"
 import {UpdateRoleDto} from "./dto/update-role.dto"
 import {RoleEntity} from "./entities/role.entity"
-import {Roles} from "../auth/decorators/roles.decorator"
+import {AdminPermissions} from "../auth/decorators/permissions.decorator"
 
 @ApiTags("Admin Roles")
 @ApiBearerAuth("admin-bearer")
@@ -12,8 +12,15 @@ import {Roles} from "../auth/decorators/roles.decorator"
 export class RoleController {
     constructor(private readonly roleService: RoleService) {}
 
+    @Get("permissions")
+    @AdminPermissions("staff.read")
+    @ApiOperation({summary: "Get permission catalog for role builder"})
+    getPermissionCatalog() {
+        return this.roleService.getPermissionCatalog()
+    }
+
     @Post()
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Create role"})
     @ApiBody({type: CreateRoleDto})
     @ApiResponse({status: 200, type: RoleEntity})
@@ -23,7 +30,7 @@ export class RoleController {
     }
 
     @Get()
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.read")
     @ApiOperation({summary: "Get all roles"})
     @ApiResponse({status: 200, type: RoleEntity, isArray: true})
     findAll() {
@@ -31,7 +38,7 @@ export class RoleController {
     }
 
     @Get(":id")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.read")
     @ApiOperation({summary: "Get role by id"})
     @ApiResponse({status: 200, type: RoleEntity})
     findOne(@Param("id") id: string) {
@@ -39,7 +46,7 @@ export class RoleController {
     }
 
     @Patch(":id")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Update role"})
     @ApiBody({type: UpdateRoleDto})
     @ApiResponse({status: 200, type: RoleEntity})
@@ -49,7 +56,7 @@ export class RoleController {
     }
 
     @Delete(":id")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Delete role"})
     @ApiResponse({status: 200})
     remove(@Param("id") id: string) {

@@ -8,6 +8,7 @@ type AdminTokenPayload = {
     firstName: string
     lastName: string
     roles: string[]
+    permissions: string[]
     iat: number
     exp: number
 }

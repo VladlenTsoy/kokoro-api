@@ -20,6 +20,10 @@ export class RoleEntity {
     @Column({type: "boolean", default: true})
     isActive: boolean
 
+    @ApiProperty({example: ["orders.read", "orders.update"], description: "Admin permission codes", isArray: true})
+    @Column({type: "json", nullable: true})
+    permissions?: string[] | null
+
     @ManyToMany(() => EmployeeEntity, (employee) => employee.roles)
     employees: EmployeeEntity[]
 

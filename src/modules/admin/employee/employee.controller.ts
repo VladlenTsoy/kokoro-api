@@ -4,8 +4,8 @@ import {EmployeeService} from "./employee.service"
 import {CreateEmployeeDto} from "./dto/create-employee.dto"
 import {UpdateEmployeeDto} from "./dto/update-employee.dto"
 import {AssignRolesDto} from "./dto/assign-roles.dto"
-import {Roles} from "../auth/decorators/roles.decorator"
 import {EmployeeEntity} from "./entities/employee.entity"
+import {AdminPermissions} from "../auth/decorators/permissions.decorator"
 
 @ApiTags("Admin Employees")
 @ApiBearerAuth("admin-bearer")
@@ -14,7 +14,7 @@ export class EmployeeController {
     constructor(private readonly employeeService: EmployeeService) {}
 
     @Post()
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Create employee"})
     @ApiBody({type: CreateEmployeeDto})
     @ApiResponse({status: 200, type: EmployeeEntity})
@@ -24,7 +24,7 @@ export class EmployeeController {
     }
 
     @Get()
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.read")
     @ApiOperation({summary: "Get all employees"})
     @ApiResponse({status: 200, type: EmployeeEntity, isArray: true})
     findAll() {
@@ -32,7 +32,7 @@ export class EmployeeController {
     }
 
     @Get(":id")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.read")
     @ApiOperation({summary: "Get employee by id"})
     @ApiResponse({status: 200, type: EmployeeEntity})
     findOne(@Param("id") id: string) {
@@ -40,7 +40,7 @@ export class EmployeeController {
     }
 
     @Patch(":id")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Update employee by id"})
     @ApiBody({type: UpdateEmployeeDto})
     @ApiResponse({status: 200, type: EmployeeEntity})
@@ -50,7 +50,7 @@ export class EmployeeController {
     }
 
     @Patch(":id/roles")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Assign roles to employee"})
     @ApiBody({type: AssignRolesDto})
     @ApiResponse({status: 200, type: EmployeeEntity})
@@ -60,7 +60,7 @@ export class EmployeeController {
     }
 
     @Delete(":id")
-    @Roles("SUPER_ADMIN")
+    @AdminPermissions("staff.manage")
     @ApiOperation({summary: "Delete employee by id"})
     @ApiResponse({status: 200})
     remove(@Param("id") id: string) {

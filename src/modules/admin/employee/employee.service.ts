@@ -7,6 +7,7 @@ import {UpdateEmployeeDto} from "./dto/update-employee.dto"
 import {AssignRolesDto} from "./dto/assign-roles.dto"
 import {RoleService} from "../role/role.service"
 import {AuthCryptoService} from "../auth/auth-crypto.service"
+import {ALL_ADMIN_PERMISSION_CODES, isSuperAdmin} from "../auth/permissions/admin-permissions"
 
 @Injectable()
 export class EmployeeService {
@@ -19,13 +20,20 @@ export class EmployeeService {
 
     private sanitize(employee: EmployeeEntity) {
         const {passwordHash, passwordSalt, ...safeEmployee} = employee
+        const roleCodes = (employee.roles || []).filter((role) => role.isActive).map((role) => role.code)
+        const permissions = isSuperAdmin(roleCodes)
+            ? ALL_ADMIN_PERMISSION_CODES
+            : Array.from(new Set((employee.roles || []).filter((role) => role.isActive).flatMap((role) => role.permissions || [])))
+
         return {
             ...safeEmployee,
+            permissions,
             roles: (employee.roles || []).map((role) => ({
                 id: role.id,
                 code: role.code,
                 name: role.name,
-                isActive: role.isActive
+                isActive: role.isActive,
+                permissions: isSuperAdmin([role.code]) ? ALL_ADMIN_PERMISSION_CODES : role.permissions || []
             }))
         }
     }

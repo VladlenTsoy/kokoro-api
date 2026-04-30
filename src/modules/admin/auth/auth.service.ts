@@ -8,6 +8,7 @@ import {BootstrapAdminDto} from "./dto/bootstrap-admin.dto"
 import {RoleService} from "../role/role.service"
 import {EmployeeEntity} from "../employee/entities/employee.entity"
 import {AdminRefreshTokenEntity} from "./entities/admin-refresh-token.entity"
+import {ALL_ADMIN_PERMISSION_CODES, isSuperAdmin} from "./permissions/admin-permissions"
 
 @Injectable()
 export class AuthService {
@@ -22,12 +23,19 @@ export class AuthService {
     ) {}
 
     private buildTokenPayload(employee: EmployeeEntity) {
+        const activeRoles = (employee.roles || []).filter((role) => role.isActive)
+        const roleCodes = activeRoles.map((role) => role.code)
+        const permissions = isSuperAdmin(roleCodes)
+            ? ALL_ADMIN_PERMISSION_CODES
+            : Array.from(new Set(activeRoles.flatMap((role) => role.permissions || [])))
+
         return {
             sub: employee.id,
             email: employee.email,
             firstName: employee.firstName,
             lastName: employee.lastName,
-            roles: (employee.roles || []).filter((role) => role.isActive).map((role) => role.code)
+            roles: roleCodes,
+            permissions
         }
     }
 

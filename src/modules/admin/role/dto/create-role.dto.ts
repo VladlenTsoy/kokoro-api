@@ -1,5 +1,5 @@
 import {ApiProperty} from "@nestjs/swagger"
-import {IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength} from "class-validator"
+import {IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength} from "class-validator"
 
 export class CreateRoleDto {
     @ApiProperty({example: "SUPER_ADMIN", description: "Role code"})
@@ -18,4 +18,14 @@ export class CreateRoleDto {
     @IsBoolean()
     @IsOptional()
     isActive?: boolean
+
+    @ApiProperty({
+        example: ["orders.read", "orders.update", "clients.read"],
+        required: false,
+        description: "Permission codes from GET /admin/roles/permissions"
+    })
+    @IsArray()
+    @IsString({each: true})
+    @IsOptional()
+    permissions?: string[]
 }

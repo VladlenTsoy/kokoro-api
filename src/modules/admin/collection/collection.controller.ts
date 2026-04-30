@@ -4,11 +4,9 @@ import {CollectionService} from "./collection.service"
 import {CreateCollectionDto} from "./dto/create-collection.dto"
 import {UpdateCollectionDto} from "./dto/update-collection.dto"
 import {CollectionEntity} from "./entities/collection.entity"
-import {Roles} from "../auth/decorators/roles.decorator"
 
 @ApiTags("Collections")
 @ApiBearerAuth("admin-bearer")
-@Roles("SUPER_ADMIN")
 @Controller("admin/collections")
 export class CollectionController {
     constructor(private readonly collectionService: CollectionService) {}

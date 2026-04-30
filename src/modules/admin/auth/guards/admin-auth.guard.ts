@@ -2,6 +2,8 @@ import {CanActivate, ExecutionContext, Injectable, UnauthorizedException} from "
 import {Reflector} from "@nestjs/core"
 import {AuthCryptoService} from "../auth-crypto.service"
 import {IS_PUBLIC_KEY} from "../decorators/public.decorator"
+import {ADMIN_PERMISSIONS_KEY} from "../decorators/permissions.decorator"
+import {isAdminAccessPath} from "../permissions/admin-permissions"
 
 @Injectable()
 export class AdminAuthGuard implements CanActivate {
@@ -20,8 +22,12 @@ export class AdminAuthGuard implements CanActivate {
 
         const request = context.switchToHttp().getRequest()
         const requestPath = request.path || request.originalUrl || ""
+        const hasAdminPermissions = this.reflector.getAllAndOverride<string[]>(ADMIN_PERMISSIONS_KEY, [
+            context.getHandler(),
+            context.getClass()
+        ])
 
-        if (!requestPath.includes("/admin")) return true
+        if (!isAdminAccessPath(requestPath) && !hasAdminPermissions?.length) return true
 
         const authHeader = request.headers?.authorization
         if (!authHeader || typeof authHeader !== "string") {
@@ -43,7 +49,8 @@ export class AdminAuthGuard implements CanActivate {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
-            roleCodes: payload.roles
+            roleCodes: payload.roles || [],
+            permissions: payload.permissions || []
         }
 
         return true
