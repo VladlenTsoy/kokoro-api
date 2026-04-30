@@ -34,4 +34,8 @@ export class FilterProductVariantDto {
     @IsOptional()
     @IsArray()
     storageIds: number[]
+
+    @IsOptional()
+    @IsArray()
+    tagIds: number[]
 }

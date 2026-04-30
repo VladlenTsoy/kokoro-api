@@ -19,6 +19,17 @@ export class ClientProductVariantController {
         return Array.from(new Set(values))
     }
 
+    private parseStringList(value?: string | string[]): string[] | undefined {
+        if (!value) return undefined
+        const chunks = Array.isArray(value) ? value : [value]
+        const values = chunks
+            .flatMap((chunk) => String(chunk).split(","))
+            .map((item) => item.trim().toLowerCase())
+            .filter(Boolean)
+        if (values.length === 0) return undefined
+        return Array.from(new Set(values))
+    }
+
     @Get()
     @ApiOperation({summary: "Get product variants for client"})
     @ApiResponse({
@@ -33,7 +44,9 @@ export class ClientProductVariantController {
         @Query("sortOrder") sortOrder?: string,
         @Query("categoryId") categoryId?: string,
         @Query("colorIds") colorIds?: string | string[],
-        @Query("sizeIds") sizeIds?: string | string[]
+        @Query("sizeIds") sizeIds?: string | string[],
+        @Query("tagIds") tagIds?: string | string[],
+        @Query("tagSlugs") tagSlugs?: string | string[]
     ) {
         return this.productVariantService.findAll({
             page: page ? Number(page) : undefined,
@@ -41,7 +54,9 @@ export class ClientProductVariantController {
             sortOrder,
             categoryId: categoryId ? Number(categoryId) : undefined,
             colorIds: this.parseNumberList(colorIds),
-            sizeIds: this.parseNumberList(sizeIds)
+            sizeIds: this.parseNumberList(sizeIds),
+            tagIds: this.parseNumberList(tagIds),
+            tagSlugs: this.parseStringList(tagSlugs)
         })
     }
 
@@ -63,6 +78,24 @@ export class ClientProductVariantController {
     })
     findAvailableSizes(@Query("categoryId") categoryId?: string) {
         return this.productVariantService.findAvailableSizes(categoryId ? Number(categoryId) : undefined)
+    }
+
+    @Get("new-arrivals")
+    @ApiOperation({summary: "Get newest active product variants for homepage"})
+    findNewArrivals(@Query("limit") limit?: string) {
+        return this.productVariantService.findNewArrivals(limit ? Number(limit) : undefined)
+    }
+
+    @Get("bestsellers")
+    @ApiOperation({summary: "Get bestselling active product variants for homepage"})
+    findBestsellers(@Query("limit") limit?: string) {
+        return this.productVariantService.findBestsellers(limit ? Number(limit) : undefined)
+    }
+
+    @Get("discounted")
+    @ApiOperation({summary: "Get active discounted product variants for homepage"})
+    findDiscounted(@Query("limit") limit?: string) {
+        return this.productVariantService.findDiscounted(limit ? Number(limit) : undefined)
     }
 
     @Get(":id")

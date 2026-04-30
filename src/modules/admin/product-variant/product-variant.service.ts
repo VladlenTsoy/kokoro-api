@@ -1,4 +1,4 @@
-import {Injectable, NotFoundException} from "@nestjs/common"
+import {ConflictException, Injectable, NotFoundException} from "@nestjs/common"
 import {CreateProductVariantDto} from "./dto/create-product-variant.dto"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Not, Repository} from "typeorm"
@@ -12,6 +12,7 @@ import {FilterProductVariantDto} from "./dto/filter-product-variant.dto"
 import {ProductVariantDiscountService} from "../product-variant-discount/product-variant-discount.service"
 import {ProductVariantMeasurementService} from "../product-variant-measurement/product-variant-measurement.service"
 import {CollectionService} from "../collection/collection.service"
+import {OrderItemEntity} from "../order-item/entities/order-item.entity"
 
 @Injectable()
 export class ProductVariantService {
@@ -121,9 +122,10 @@ export class ProductVariantService {
                 collectionIds?: number[]
                 salesPointIds?: number[]
                 storageIds?: number[]
+                tagIds?: number[]
             }
         ) => {
-            const {search, categoryIds, sizeIds, statusId, collectionIds, salesPointIds, storageIds} = f
+            const {search, categoryIds, sizeIds, statusId, collectionIds, salesPointIds, storageIds, tagIds} = f
 
             // 1) search by pv.title OR product.title
             if (search && String(search).trim() !== "") {
@@ -182,6 +184,13 @@ export class ProductVariantService {
                 qb.andWhere("collection_filter.id IN (:...collectionIds)", {collectionIds})
             }
 
+            if (Array.isArray(tagIds) && tagIds.length > 0) {
+                if (!qb.expressionMap.aliases.some((a: any) => a.name === "tag_filter")) {
+                    qb.leftJoin("pv.tags", "tag_filter")
+                }
+                qb.andWhere("tag_filter.id IN (:...tagIds)", {tagIds})
+            }
+
             if (Array.isArray(storageIds) && storageIds.length > 0) {
                 qb.andWhere("pv.storage_id IN (:...storageIds)", {storageIds})
             }
@@ -210,7 +219,8 @@ export class ProductVariantService {
             statusId: filter.statusId,
             collectionIds: filter.collectionIds,
             salesPointIds: filter.salesPointIds,
-            storageIds: filter.storageIds
+            storageIds: filter.storageIds,
+            tagIds: filter.tagIds
         })
         const rawCount = await countQb.select("COUNT(DISTINCT pv.id)", "cnt").getRawOne()
         const total = parseInt(String(rawCount?.cnt ?? "0"), 10)
@@ -230,7 +240,8 @@ export class ProductVariantService {
             statusId: filter.statusId,
             collectionIds: filter.collectionIds,
             salesPointIds: filter.salesPointIds,
-            storageIds: filter.storageIds
+            storageIds: filter.storageIds,
+            tagIds: filter.tagIds
         })
 
         const rawIdRows = await idsQb.getRawMany()
@@ -247,6 +258,7 @@ export class ProductVariantService {
             .leftJoinAndSelect("productVariant.images", "images")
             .leftJoinAndSelect("productVariant.status", "status")
             .leftJoinAndSelect("productVariant.collections", "collections")
+            .leftJoinAndSelect("productVariant.tags", "tags")
             .whereInIds(ids)
             .select([
                 "productVariant.id",
@@ -269,6 +281,11 @@ export class ProductVariantService {
                 "status.title",
                 "collections.id",
                 "collections.title",
+                "tags.id",
+                "tags.title",
+                "tags.slug",
+                "tags.type",
+                "tags.colorHex",
                 "discount.discountPercent",
                 "discount.endDate"
             ])
@@ -295,6 +312,7 @@ export class ProductVariantService {
             .leftJoinAndSelect("productVariant.status", "status")
             .leftJoinAndSelect("productVariant.measurements", "measurements")
             .leftJoinAndSelect("productVariant.collections", "collections")
+            .leftJoinAndSelect("productVariant.tags", "tags")
             .leftJoinAndSelect("product.properties", "properties")
             .where("productVariant.id = :id", {id})
             .select([
@@ -330,6 +348,11 @@ export class ProductVariantService {
 
                 "collections.id",
                 "collections.title",
+                "tags.id",
+                "tags.title",
+                "tags.slug",
+                "tags.type",
+                "tags.colorHex",
 
                 "images.id",
                 "images.name",
@@ -423,12 +446,29 @@ export class ProductVariantService {
 
         const productVariantId = productVariant.id
         const productId = productVariant.product_id
+        const orderItemsCount = await this.productVariantRepository.manager.getRepository(OrderItemEntity).count({
+            where: {productVariant: {id: productVariantId}}
+        })
+
+        if (orderItemsCount > 0) {
+            throw new ConflictException(
+                "Product variant is used in existing orders and cannot be deleted. Unpublish it instead."
+            )
+        }
 
         // 1️⃣ удаляем зависимости
         await this.productSizeService.removeByProductVariantId(productVariantId)
         await this.productVariantMeasurementService.removeByProductVariant(productVariant)
         await this.productVariantImageService.removeByProductVariantId(productVariantId)
         await this.productDiscountService.removeByProductVariantId(productVariantId)
+        await this.productVariantRepository.manager.query(
+            "DELETE FROM `product_tag_assignments` WHERE `product_variant_id` = ?",
+            [productVariantId]
+        )
+        await this.productVariantRepository.manager.query(
+            "DELETE FROM `collection_product_variants` WHERE `product_variant_id` = ?",
+            [productVariantId]
+        )
 
         // 2️⃣ удаляем variant
         await this.productVariantRepository.delete(productVariantId)
