@@ -93,6 +93,19 @@ export class OrderService {
         return {page: safePage, pageSize: safePageSize, skip: (safePage - 1) * safePageSize}
     }
 
+    private parseDateFilter(value: string, boundary: "start" | "end") {
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) {
+            throw new BadRequestException("Invalid date filter")
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            date.setHours(boundary === "start" ? 0 : 23, boundary === "start" ? 0 : 59, boundary === "start" ? 0 : 59, boundary === "start" ? 0 : 999)
+        }
+
+        return date
+    }
+
     private async getOrderOrFail(id: number) {
         const order = await this.repo.findOne({
             where: {id},
@@ -324,8 +337,8 @@ export class OrderService {
         if (filters.sourceId) query.andWhere("source.id = :sourceId", {sourceId: filters.sourceId})
         if (filters.paymentStatus) query.andWhere("order.paymentStatus = :paymentStatus", {paymentStatus: filters.paymentStatus})
         if (filters.deliveryStatus) query.andWhere("order.deliveryStatus = :deliveryStatus", {deliveryStatus: filters.deliveryStatus})
-        if (filters.from) query.andWhere("order.createdAt >= :from", {from: new Date(filters.from)})
-        if (filters.to) query.andWhere("order.createdAt <= :to", {to: new Date(filters.to)})
+        if (filters.from) query.andWhere("order.createdAt >= :from", {from: this.parseDateFilter(filters.from, "start")})
+        if (filters.to) query.andWhere("order.createdAt <= :to", {to: this.parseDateFilter(filters.to, "end")})
 
         const [items, total] = await query.orderBy("order.id", "DESC").skip(skip).take(pageSize).getManyAndCount()
 
