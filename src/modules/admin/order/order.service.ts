@@ -106,6 +106,27 @@ export class OrderService {
         return date
     }
 
+    private problemThresholdDate() {
+        return new Date(Date.now() - 10 * 60 * 1000)
+    }
+
+    private applyProblemOrdersCondition(query: ReturnType<Repository<OrderEntity>["createQueryBuilder"]>) {
+        query.andWhere(
+            `(
+                (order.deliveryStatus = :pending AND order.createdAt <= :problemThreshold)
+                OR (order.paymentStatus = :paid AND order.deliveryStatus IN (:...problemDeliveryStatuses))
+                OR order.paymentStatus = :failed
+            )`,
+            {
+                pending: OrderDeliveryStatus.PENDING,
+                paid: OrderPaymentStatus.PAID,
+                failed: OrderPaymentStatus.FAILED,
+                problemThreshold: this.problemThresholdDate(),
+                problemDeliveryStatuses: [OrderDeliveryStatus.PENDING, OrderDeliveryStatus.CANCELLED]
+            }
+        )
+    }
+
     private async getOrderOrFail(id: number) {
         const order = await this.repo.findOne({
             where: {id},
@@ -339,6 +360,7 @@ export class OrderService {
         if (filters.deliveryStatus) query.andWhere("order.deliveryStatus = :deliveryStatus", {deliveryStatus: filters.deliveryStatus})
         if (filters.from) query.andWhere("order.createdAt >= :from", {from: this.parseDateFilter(filters.from, "start")})
         if (filters.to) query.andWhere("order.createdAt <= :to", {to: this.parseDateFilter(filters.to, "end")})
+        if (filters.problemOnly) this.applyProblemOrdersCondition(query)
 
         const [items, total] = await query.orderBy("order.id", "DESC").skip(skip).take(pageSize).getManyAndCount()
 
@@ -351,21 +373,47 @@ export class OrderService {
         start.setHours(0, 0, 0, 0)
         const end = new Date(now)
         end.setHours(23, 59, 59, 999)
-        const [ordersToday, newOrders, revenueToday] = await Promise.all([
+        const problemQuery = this.repo
+            .createQueryBuilder("order")
+            .where("order.createdAt BETWEEN :start AND :end", {start, end})
+        this.applyProblemOrdersCondition(problemQuery)
+
+        const [ordersToday, newOrders, inProgressToday, readyToday, problemToday, revenueToday, recentActivity] = await Promise.all([
             this.repo.count({where: {createdAt: Between(start, end)}}),
-            this.repo.count({where: {deliveryStatus: OrderDeliveryStatus.PENDING}}),
+            this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.PENDING}}),
+            this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.PREPARING}}),
+            this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.READY}}),
+            problemQuery.getCount(),
             this.repo
                 .createQueryBuilder("order")
                 .select("COALESCE(SUM(order.total), 0)", "sum")
                 .where("order.createdAt BETWEEN :start AND :end", {start, end})
                 .andWhere("order.deliveryStatus != :cancelled", {cancelled: OrderDeliveryStatus.CANCELLED})
-                .getRawOne()
+                .getRawOne(),
+            this.historyRepo.find({
+                relations: {order: true, fromStatus: true, toStatus: true, employee: true},
+                order: {changedAt: "DESC", id: "DESC"},
+                take: 10
+            })
         ])
 
         return {
             ordersToday,
             newOrders,
-            revenueToday: Number(revenueToday?.sum || 0)
+            inProgressToday,
+            readyToday,
+            problemToday,
+            revenueToday: Number(revenueToday?.sum || 0),
+            recentActivity: recentActivity.map((item) => ({
+                id: item.id,
+                orderId: item.order?.id,
+                orderNumber: item.order?.orderNumber,
+                event: item.comment || "Order status changed",
+                changedBy: item.changedBy,
+                changedAt: item.changedAt,
+                fromStatus: item.fromStatus?.title,
+                toStatus: item.toStatus?.title
+            }))
         }
     }
 

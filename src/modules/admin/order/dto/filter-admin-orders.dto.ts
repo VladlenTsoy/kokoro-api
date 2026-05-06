@@ -1,5 +1,5 @@
 import {ApiPropertyOptional} from "@nestjs/swagger"
-import {IsInt, IsOptional, IsString} from "class-validator"
+import {IsBoolean, IsInt, IsOptional, IsString} from "class-validator"
 import {Type} from "class-transformer"
 
 export class FilterAdminOrdersDto {
@@ -45,6 +45,12 @@ export class FilterAdminOrdersDto {
     @IsOptional()
     @IsString()
     to?: string
+
+    @ApiPropertyOptional({default: false})
+    @IsOptional()
+    @Type(() => Boolean)
+    @IsBoolean()
+    problemOnly?: boolean
 
     @ApiPropertyOptional({default: 1})
     @IsOptional()
