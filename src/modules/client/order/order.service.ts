@@ -309,7 +309,8 @@ export class ClientOrderService {
 
                     selectedSize = await productVariantSizeRepository.findOne({
                         where: {id: item.sizeId},
-                        relations: {productVariant: true, size: true}
+                        relations: {productVariant: true, size: true},
+                        lock: {mode: "pessimistic_write"}
                     })
 
                     if (!selectedSize || selectedSize.productVariant.id !== variant.id) {

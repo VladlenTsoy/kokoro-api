@@ -107,6 +107,14 @@ export class ProductVariantService {
         const pageSize = Number(filter.pageSize) > 0 ? Number(filter.pageSize) : 20
         const skip = (page - 1) * pageSize
         const take = pageSize
+        const sortFields: Record<string, string> = {
+            id: "pv.id",
+            title: "pv.title",
+            price: "pv.price",
+            created_at: "pv.created_at"
+        }
+        const sortField = sortFields[String(filter.sortField || "id")] || sortFields.id
+        const sortDirection = String(filter.sortOrder || "ascend").toLowerCase() === "descend" ? "DESC" : "ASC"
 
         const pvMeta = this.productVariantRepository.metadata
         const hasRelation = (meta: any, prop: string) => meta.relations.some((r: any) => r.propertyName === prop)
@@ -229,7 +237,8 @@ export class ProductVariantService {
             .createQueryBuilder("pv")
             .select("pv.id", "id")
             .distinct(true)
-            .orderBy("pv.id", "ASC")
+            .orderBy(sortField, sortDirection)
+            .addOrderBy("pv.id", sortDirection)
             .skip(skip)
             .take(take)
 
@@ -271,6 +280,8 @@ export class ProductVariantService {
                 "color.hex",
                 "sizes.id",
                 "sizes.qty",
+                "sizes.reservedQty",
+                "sizes.soldQty",
                 "sizes.min_qty",
                 "size.id",
                 "size.title",
@@ -332,6 +343,8 @@ export class ProductVariantService {
                 "sizes.id",
                 "sizes.qty",
                 "sizes.cost_price",
+                "sizes.reservedQty",
+                "sizes.soldQty",
                 "sizes.min_qty",
 
                 "size.id",

@@ -157,7 +157,8 @@ export class ClientProductVariantService {
         const skip = (currentPage - 1) * currentPageSize
         const take = currentPageSize
         const normalizedSortOrder = String(sortOrder || "desc").toLowerCase()
-        const sortDirection = normalizedSortOrder === "asc" ? "ASC" : "DESC"
+        const normalizedSortBy = String(sortOrder || "newest").toLowerCase()
+        const sortDirection = normalizedSortBy === "oldest" || normalizedSortOrder === "asc" ? "ASC" : "DESC"
         const categoryIds =
             categoryId && Number.isFinite(categoryId)
                 ? await this.resolveCategoryTreeIds(Number(categoryId))
@@ -205,7 +206,12 @@ export class ClientProductVariantService {
             .select("pv.id", "id")
             .distinct(true)
             .where("pv.status_id = :statusId", {statusId: 2})
-            .orderBy("pv.created_at", sortDirection)
+            .orderBy(
+                normalizedSortBy === "price_asc" || normalizedSortBy === "price_desc"
+                    ? "pv.price"
+                    : "pv.created_at",
+                normalizedSortBy === "price_asc" ? "ASC" : normalizedSortBy === "price_desc" ? "DESC" : sortDirection
+            )
             .addOrderBy("pv.id", sortDirection)
             .skip(skip)
             .take(take)
@@ -256,6 +262,7 @@ export class ClientProductVariantService {
                 "color.hex",
                 "sizes.id",
                 "sizes.qty",
+                "sizes.reservedQty",
                 "size.id",
                 "size.title",
                 "images.id",

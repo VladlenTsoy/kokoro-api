@@ -38,4 +38,12 @@ export class FilterProductVariantDto {
     @IsOptional()
     @IsArray()
     tagIds: number[]
+
+    @IsOptional()
+    @IsString()
+    sortField?: string
+
+    @IsOptional()
+    @IsString()
+    sortOrder?: string
 }

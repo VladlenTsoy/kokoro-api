@@ -181,6 +181,7 @@ export class OrderService {
 
             variantSize.reservedQty = Math.max(Number(variantSize.reservedQty || 0) - item.qty, 0)
             if (next === OrderDeliveryStatus.DELIVERED) {
+                variantSize.qty = Math.max(Number(variantSize.qty || 0) - item.qty, 0)
                 variantSize.soldQty = Number(variantSize.soldQty || 0) + item.qty
             }
             await this.productVariantSizeRepo.save(variantSize)
