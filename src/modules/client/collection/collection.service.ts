@@ -119,7 +119,10 @@ export class ClientCollectionService {
         const currentPageSize = this.normalizePageSize(pageSize)
         const skip = (currentPage - 1) * currentPageSize
 
-        const collection = await this.collectionRepository.findOne({where: {id: collectionId}, select: {id: true, title: true}})
+        const collection = await this.collectionRepository.findOne({
+            where: {id: collectionId},
+            select: {id: true, title: true}
+        })
         if (!collection) {
             throw new NotFoundException("Collection not found")
         }

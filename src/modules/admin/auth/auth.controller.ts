@@ -60,7 +60,11 @@ export class AuthController {
     @ApiResponse({status: 200, description: "Password changed"})
     @UsePipes(new ValidationPipe({transform: true}))
     changePassword(@CurrentAdmin() adminUser: AdminAuthenticatedUser, @Body() changePasswordDto: ChangePasswordDto) {
-        return this.authService.changePassword(adminUser.id, changePasswordDto.currentPassword, changePasswordDto.newPassword)
+        return this.authService.changePassword(
+            adminUser.id,
+            changePasswordDto.currentPassword,
+            changePasswordDto.newPassword
+        )
     }
 
     @Post("logout")

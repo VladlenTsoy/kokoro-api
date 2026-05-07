@@ -26,7 +26,10 @@ export class ClientOrderController {
     @ApiBody({type: CreateClientOrderDto})
     @ApiResponse({status: 200, description: "Order has been successfully created"})
     @UsePipes(new ValidationPipe({transform: true}))
-    create(@Body() createClientOrderDto: CreateClientOrderDto, @CurrentClient() clientUser: ClientAuthenticatedUser | null) {
+    create(
+        @Body() createClientOrderDto: CreateClientOrderDto,
+        @CurrentClient() clientUser: ClientAuthenticatedUser | null
+    ) {
         return this.clientOrderService.create(createClientOrderDto, clientUser?.id)
     }
 
@@ -34,7 +37,11 @@ export class ClientOrderController {
     @UseGuards(ClientAuthGuard)
     @ApiBearerAuth("client-bearer")
     @ApiOperation({summary: "Get current client orders"})
-    findAll(@CurrentClient() clientUser: ClientAuthenticatedUser, @Query("page") page?: string, @Query("pageSize") pageSize?: string) {
+    findAll(
+        @CurrentClient() clientUser: ClientAuthenticatedUser,
+        @Query("page") page?: string,
+        @Query("pageSize") pageSize?: string
+    ) {
         return this.clientOrderService.findAllForClient(
             clientUser.id,
             page ? Number(page) : 1,

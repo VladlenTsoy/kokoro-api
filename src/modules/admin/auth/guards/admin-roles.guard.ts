@@ -48,7 +48,11 @@ export class AdminRolesGuard implements CanActivate {
         }
 
         const inferredPermission = inferAdminPermissionFromRequest(request)
-        const requiredPermissions = explicitPermissions?.length ? explicitPermissions : inferredPermission ? [inferredPermission] : []
+        const requiredPermissions = explicitPermissions?.length
+            ? explicitPermissions
+            : inferredPermission
+              ? [inferredPermission]
+              : []
 
         if (!requiredPermissions.length) return true
 

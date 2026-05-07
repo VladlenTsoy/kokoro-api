@@ -107,11 +107,15 @@ function normalizePath(path: string) {
 }
 
 export function normalizeAdminPermissions(permissions?: string[] | null) {
-    const normalized = Array.from(new Set((permissions || []).map((permission) => permission.trim().toLowerCase()).filter(Boolean)))
+    const normalized = Array.from(
+        new Set((permissions || []).map((permission) => permission.trim().toLowerCase()).filter(Boolean))
+    )
     const invalidPermissions = normalized.filter((permission) => !ALL_ADMIN_PERMISSION_CODE_SET.has(permission))
 
     return {
-        permissions: normalized.filter((permission) => ALL_ADMIN_PERMISSION_CODE_SET.has(permission)) as AdminPermissionCode[],
+        permissions: normalized.filter((permission) =>
+            ALL_ADMIN_PERMISSION_CODE_SET.has(permission)
+        ) as AdminPermissionCode[],
         invalidPermissions
     }
 }
@@ -184,7 +188,9 @@ function moduleFromPath(path: string): AdminPermissionModuleCode | null {
 
 export function isAdminAccessPath(path: string) {
     const normalizedPath = normalizePath(path)
-    return normalizedPath.startsWith("/admin") || LEGACY_ADMIN_PREFIXES.some((prefix) => normalizedPath.startsWith(prefix))
+    return (
+        normalizedPath.startsWith("/admin") || LEGACY_ADMIN_PREFIXES.some((prefix) => normalizedPath.startsWith(prefix))
+    )
 }
 
 export function inferAdminPermissionFromRequest(request: Request): AdminPermissionCode | null {
@@ -195,8 +201,10 @@ export function inferAdminPermissionFromRequest(request: Request): AdminPermissi
     let action = actionFromMethod(request.method || "GET")
 
     if (normalizedPath === "/admin/product-variant/all") action = "read"
-    if (normalizedPath.includes("/cancel") || normalizedPath.includes("/status") || normalizedPath.includes("/roles")) action = "update"
-    if (normalizedPath.endsWith("/merge") || normalizedPath.includes("/block") || normalizedPath.includes("/unblock")) action = "update"
+    if (normalizedPath.includes("/cancel") || normalizedPath.includes("/status") || normalizedPath.includes("/roles"))
+        action = "update"
+    if (normalizedPath.endsWith("/merge") || normalizedPath.includes("/block") || normalizedPath.includes("/unblock"))
+        action = "update"
 
     return `${moduleCode}.${action}` as AdminPermissionCode
 }

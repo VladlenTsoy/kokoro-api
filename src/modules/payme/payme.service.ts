@@ -261,7 +261,9 @@ export class PaymeService {
         })
         if (!transaction) return this.error(-31003, "Transaction not found", "transaction")
 
-        if ([PaymeTransactionState.CANCELLED, PaymeTransactionState.CANCELLED_AFTER_PERFORM].includes(transaction.state)) {
+        if (
+            [PaymeTransactionState.CANCELLED, PaymeTransactionState.CANCELLED_AFTER_PERFORM].includes(transaction.state)
+        ) {
             return this.result(this.serializeTransaction(transaction))
         }
 

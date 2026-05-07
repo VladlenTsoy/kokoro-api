@@ -1,5 +1,15 @@
 import {ApiProperty} from "@nestjs/swagger"
-import {IsArray, IsBoolean, IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength} from "class-validator"
+import {
+    IsArray,
+    IsBoolean,
+    IsEmail,
+    IsInt,
+    IsNotEmpty,
+    IsOptional,
+    IsString,
+    MaxLength,
+    MinLength
+} from "class-validator"
 
 export class CreateEmployeeDto {
     @ApiProperty({example: "john.doe@kokoro.uz"})

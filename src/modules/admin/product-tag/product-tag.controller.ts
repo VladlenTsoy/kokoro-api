@@ -38,7 +38,11 @@ export class ProductTagController {
         type: ProductTagEntity,
         isArray: true
     })
-    findAll(@Query("type") type?: ProductTagType, @Query("isActive") isActive?: string, @Query("search") search?: string) {
+    findAll(
+        @Query("type") type?: ProductTagType,
+        @Query("isActive") isActive?: string,
+        @Query("search") search?: string
+    ) {
         return this.productTagService.findAll({
             type,
             isActive: isActive === undefined ? undefined : isActive === "true",

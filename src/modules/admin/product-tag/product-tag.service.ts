@@ -149,7 +149,9 @@ export class ProductTagService {
     }
 
     findByIds(tagIds: number[]) {
-        const normalizedIds = Array.from(new Set((tagIds || []).map((id) => Number(id)).filter((id) => Number.isFinite(id))))
+        const normalizedIds = Array.from(
+            new Set((tagIds || []).map((id) => Number(id)).filter((id) => Number.isFinite(id)))
+        )
         if (!normalizedIds.length) return Promise.resolve([])
 
         return this.productTagRepository.find({where: {id: In(normalizedIds)}}).then((tags) => {
@@ -188,7 +190,8 @@ export class ProductTagService {
             productTag.slug = slug
         }
         if (updateProductTagDto.type !== undefined) productTag.type = this.normalizeType(updateProductTagDto.type)
-        if (updateProductTagDto.colorHex !== undefined) productTag.colorHex = this.normalizeColorHex(updateProductTagDto.colorHex)
+        if (updateProductTagDto.colorHex !== undefined)
+            productTag.colorHex = this.normalizeColorHex(updateProductTagDto.colorHex)
         if (updateProductTagDto.isActive !== undefined) productTag.isActive = updateProductTagDto.isActive
         if (updateProductTagDto.sortOrder !== undefined) productTag.sortOrder = updateProductTagDto.sortOrder
 

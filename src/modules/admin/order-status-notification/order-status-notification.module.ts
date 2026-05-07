@@ -8,7 +8,14 @@ import {OrderStatusEntity} from "../order-status/entities/order-status.entity"
 import {OrderEntity} from "../order/entities/order.entity"
 
 @Module({
-    imports: [TypeOrmModule.forFeature([OrderStatusNotificationEntity, OrderNotificationLogEntity, OrderStatusEntity, OrderEntity])],
+    imports: [
+        TypeOrmModule.forFeature([
+            OrderStatusNotificationEntity,
+            OrderNotificationLogEntity,
+            OrderStatusEntity,
+            OrderEntity
+        ])
+    ],
     controllers: [OrderStatusNotificationController],
     providers: [OrderStatusNotificationService],
     exports: [OrderStatusNotificationService]

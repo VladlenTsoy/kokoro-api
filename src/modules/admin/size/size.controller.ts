@@ -1,24 +1,8 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    UsePipes,
-    ValidationPipe
-} from "@nestjs/common"
+import {Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe} from "@nestjs/common"
 import {SizeService} from "./size.service"
 import {CreateSizeDto} from "./dto/create-size.dto"
 import {UpdateSizeDto} from "./dto/update-size.dto"
-import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiOperation,
-    ApiResponse,
-    ApiTags
-} from "@nestjs/swagger"
+import {ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {SizeEntity} from "./entities/size.entity"
 
 @ApiBearerAuth()

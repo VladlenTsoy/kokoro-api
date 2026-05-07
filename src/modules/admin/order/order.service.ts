@@ -100,7 +100,12 @@ export class OrderService {
         }
 
         if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-            date.setHours(boundary === "start" ? 0 : 23, boundary === "start" ? 0 : 59, boundary === "start" ? 0 : 59, boundary === "start" ? 0 : 999)
+            date.setHours(
+                boundary === "start" ? 0 : 23,
+                boundary === "start" ? 0 : 59,
+                boundary === "start" ? 0 : 59,
+                boundary === "start" ? 0 : 999
+            )
         }
 
         return date
@@ -160,7 +165,11 @@ export class OrderService {
         }
     }
 
-    private async applyInventoryTransition(order: OrderEntity, previous: OrderDeliveryStatus, next: OrderDeliveryStatus) {
+    private async applyInventoryTransition(
+        order: OrderEntity,
+        previous: OrderDeliveryStatus,
+        next: OrderDeliveryStatus
+    ) {
         if (previous === next) return
         if (![OrderDeliveryStatus.CANCELLED, OrderDeliveryStatus.DELIVERED].includes(next)) return
         if ([OrderDeliveryStatus.CANCELLED, OrderDeliveryStatus.DELIVERED].includes(previous)) return
@@ -303,7 +312,9 @@ export class OrderService {
         }
 
         if (dto.paymentMethodId !== undefined) {
-            order.paymentMethod = dto.paymentMethodId ? await this.paymentRepo.findOneBy({id: dto.paymentMethodId}) : null
+            order.paymentMethod = dto.paymentMethodId
+                ? await this.paymentRepo.findOneBy({id: dto.paymentMethodId})
+                : null
         }
         if (dto.sourceId !== undefined) {
             order.source = dto.sourceId ? await this.sourceRepo.findOneBy({id: dto.sourceId}) : null
@@ -357,9 +368,12 @@ export class OrderService {
             query.andWhere("paymentMethod.id = :paymentMethodId", {paymentMethodId: filters.paymentMethodId})
         }
         if (filters.sourceId) query.andWhere("source.id = :sourceId", {sourceId: filters.sourceId})
-        if (filters.paymentStatus) query.andWhere("order.paymentStatus = :paymentStatus", {paymentStatus: filters.paymentStatus})
-        if (filters.deliveryStatus) query.andWhere("order.deliveryStatus = :deliveryStatus", {deliveryStatus: filters.deliveryStatus})
-        if (filters.from) query.andWhere("order.createdAt >= :from", {from: this.parseDateFilter(filters.from, "start")})
+        if (filters.paymentStatus)
+            query.andWhere("order.paymentStatus = :paymentStatus", {paymentStatus: filters.paymentStatus})
+        if (filters.deliveryStatus)
+            query.andWhere("order.deliveryStatus = :deliveryStatus", {deliveryStatus: filters.deliveryStatus})
+        if (filters.from)
+            query.andWhere("order.createdAt >= :from", {from: this.parseDateFilter(filters.from, "start")})
         if (filters.to) query.andWhere("order.createdAt <= :to", {to: this.parseDateFilter(filters.to, "end")})
         if (filters.problemOnly) this.applyProblemOrdersCondition(query)
 
@@ -379,24 +393,27 @@ export class OrderService {
             .where("order.createdAt BETWEEN :start AND :end", {start, end})
         this.applyProblemOrdersCondition(problemQuery)
 
-        const [ordersToday, newOrders, inProgressToday, readyToday, problemToday, revenueToday, recentActivity] = await Promise.all([
-            this.repo.count({where: {createdAt: Between(start, end)}}),
-            this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.PENDING}}),
-            this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.PREPARING}}),
-            this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.READY}}),
-            problemQuery.getCount(),
-            this.repo
-                .createQueryBuilder("order")
-                .select("COALESCE(SUM(order.total), 0)", "sum")
-                .where("order.createdAt BETWEEN :start AND :end", {start, end})
-                .andWhere("order.deliveryStatus != :cancelled", {cancelled: OrderDeliveryStatus.CANCELLED})
-                .getRawOne(),
-            this.historyRepo.find({
-                relations: {order: true, fromStatus: true, toStatus: true, employee: true},
-                order: {changedAt: "DESC", id: "DESC"},
-                take: 10
-            })
-        ])
+        const [ordersToday, newOrders, inProgressToday, readyToday, problemToday, revenueToday, recentActivity] =
+            await Promise.all([
+                this.repo.count({where: {createdAt: Between(start, end)}}),
+                this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.PENDING}}),
+                this.repo.count({
+                    where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.PREPARING}
+                }),
+                this.repo.count({where: {createdAt: Between(start, end), deliveryStatus: OrderDeliveryStatus.READY}}),
+                problemQuery.getCount(),
+                this.repo
+                    .createQueryBuilder("order")
+                    .select("COALESCE(SUM(order.total), 0)", "sum")
+                    .where("order.createdAt BETWEEN :start AND :end", {start, end})
+                    .andWhere("order.deliveryStatus != :cancelled", {cancelled: OrderDeliveryStatus.CANCELLED})
+                    .getRawOne(),
+                this.historyRepo.find({
+                    relations: {order: true, fromStatus: true, toStatus: true, employee: true},
+                    order: {changedAt: "DESC", id: "DESC"},
+                    take: 10
+                })
+            ])
 
         return {
             ordersToday,

@@ -166,7 +166,9 @@ export class ClientProductVariantService {
         const normalizedColorIds = Array.isArray(colorIds) ? colorIds.filter((id) => Number.isFinite(id)) : []
         const normalizedSizeIds = Array.isArray(sizeIds) ? sizeIds.filter((id) => Number.isFinite(id)) : []
         const normalizedTagIds = Array.isArray(tagIds) ? tagIds.filter((id) => Number.isFinite(id)) : []
-        const normalizedTagSlugs = Array.isArray(tagSlugs) ? tagSlugs.map((slug) => slug.trim().toLowerCase()).filter(Boolean) : []
+        const normalizedTagSlugs = Array.isArray(tagSlugs)
+            ? tagSlugs.map((slug) => slug.trim().toLowerCase()).filter(Boolean)
+            : []
 
         if (categoryId && (!categoryIds || categoryIds.length === 0)) {
             return {items: [], total: 0}
@@ -207,9 +209,7 @@ export class ClientProductVariantService {
             .distinct(true)
             .where("pv.status_id = :statusId", {statusId: 2})
             .orderBy(
-                normalizedSortBy === "price_asc" || normalizedSortBy === "price_desc"
-                    ? "pv.price"
-                    : "pv.created_at",
+                normalizedSortBy === "price_asc" || normalizedSortBy === "price_desc" ? "pv.price" : "pv.created_at",
                 normalizedSortBy === "price_asc" ? "ASC" : normalizedSortBy === "price_desc" ? "DESC" : sortDirection
             )
             .addOrderBy("pv.id", sortDirection)

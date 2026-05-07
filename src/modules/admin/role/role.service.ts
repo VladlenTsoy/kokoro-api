@@ -54,7 +54,9 @@ export class RoleService {
     }
 
     findAll() {
-        return this.roleRepository.find({order: {id: "DESC"}}).then((roles) => roles.map((role) => this.buildRoleResponse(role)))
+        return this.roleRepository
+            .find({order: {id: "DESC"}})
+            .then((roles) => roles.map((role) => this.buildRoleResponse(role)))
     }
 
     async findOne(id: number) {

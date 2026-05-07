@@ -1,4 +1,11 @@
-import {BadGatewayException, BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException} from "@nestjs/common"
+import {
+    BadGatewayException,
+    BadRequestException,
+    HttpException,
+    HttpStatus,
+    Injectable,
+    UnauthorizedException
+} from "@nestjs/common"
 import {ConfigService} from "@nestjs/config"
 import {InjectRepository} from "@nestjs/typeorm"
 import {IsNull, MoreThan, Repository} from "typeorm"
@@ -114,7 +121,10 @@ export class ClientAuthService {
         return Number(this.configService.get("TELEGRAM_GATEWAY_CODE_TTL_SECONDS", 600))
     }
 
-    private async callTelegramGateway(method: "sendVerificationMessage" | "checkVerificationStatus", body: Record<string, any>) {
+    private async callTelegramGateway(
+        method: "sendVerificationMessage" | "checkVerificationStatus",
+        body: Record<string, any>
+    ) {
         let response: Response
         try {
             response = await fetch(`https://gatewayapi.telegram.org/${method}`, {
@@ -137,7 +147,9 @@ export class ClientAuthService {
         }
 
         if (!response.ok || !data.ok || !data.result) {
-            throw new BadGatewayException(data.error || `Telegram Gateway request failed with status ${response.status}`)
+            throw new BadGatewayException(
+                data.error || `Telegram Gateway request failed with status ${response.status}`
+            )
         }
 
         return data.result
@@ -158,7 +170,10 @@ export class ClientAuthService {
         })
 
         if (activeVerification) {
-            const retryAfterSeconds = Math.max(Math.ceil((activeVerification.expiresAt.getTime() - now.getTime()) / 1000), 1)
+            const retryAfterSeconds = Math.max(
+                Math.ceil((activeVerification.expiresAt.getTime() - now.getTime()) / 1000),
+                1
+            )
 
             return {
                 requestId: activeVerification.requestId,

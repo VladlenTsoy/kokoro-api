@@ -4,7 +4,6 @@ import {ClientProductVariantService} from "./product-variant.service"
 
 describe("ClientProductVariantController", () => {
     let controller: ClientProductVariantController
-    let service: ClientProductVariantService
 
     const serviceMock = {
         findAll: jest.fn(),
@@ -23,7 +22,6 @@ describe("ClientProductVariantController", () => {
         }).compile()
 
         controller = module.get(ClientProductVariantController)
-        service = module.get(ClientProductVariantService)
     })
 
     it("passes pagination params to service", async () => {

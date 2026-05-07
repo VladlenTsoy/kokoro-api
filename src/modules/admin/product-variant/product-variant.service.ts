@@ -392,9 +392,11 @@ export class ProductVariantService {
         const productId = updateProductVariantDto?.product_id
 
         if (updateProductVariantDto.title !== undefined) productVariant.title = updateProductVariantDto.title
-        if (updateProductVariantDto.description !== undefined) productVariant.description = updateProductVariantDto.description
+        if (updateProductVariantDto.description !== undefined)
+            productVariant.description = updateProductVariantDto.description
         if (updateProductVariantDto.price !== undefined) productVariant.price = updateProductVariantDto.price
-        if (updateProductVariantDto.product_id !== undefined) productVariant.product_id = updateProductVariantDto.product_id
+        if (updateProductVariantDto.product_id !== undefined)
+            productVariant.product_id = updateProductVariantDto.product_id
         if (updateProductVariantDto.color_id !== undefined) productVariant.color_id = updateProductVariantDto.color_id
         if (updateProductVariantDto.status_id !== undefined)
             productVariant.status_id = updateProductVariantDto.status_id

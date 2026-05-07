@@ -1,4 +1,10 @@
-import {BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException} from "@nestjs/common"
+import {
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException
+} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {DataSource, Repository} from "typeorm"
 import {randomBytes} from "crypto"
@@ -270,9 +276,10 @@ export class ClientOrderService {
                 ? await paymentRepository.findOneBy({id: dto.paymentMethodId})
                 : null
             const source = dto.sourceId ? await sourceRepository.findOneBy({id: dto.sourceId}) : null
-            const deliveryType = dto.deliveryTypeId ? await deliveryRepository.findOneBy({id: dto.deliveryTypeId}) : null
+            const deliveryType = dto.deliveryTypeId
+                ? await deliveryRepository.findOneBy({id: dto.deliveryTypeId})
+                : null
 
-            let total = 0
             const preparedItems: Array<{
                 variant: ProductVariantEntity
                 size: ProductVariantSizeEntity | null
@@ -296,9 +303,6 @@ export class ClientOrderService {
                 const discountActive = this.isDiscountActive(variant.discount)
                 const discountPercent = discountActive ? Number(variant.discount?.discountPercent || 0) : 0
                 const unitDiscount = Math.round((basePrice * discountPercent) / 100)
-                const finalUnitPrice = Math.max(basePrice - unitDiscount, 0)
-                const lineTotal = finalUnitPrice * item.qty
-                total += lineTotal
                 let selectedSize: ProductVariantSizeEntity | null = null
                 const availableSizes = variant.sizes || []
 
@@ -314,12 +318,16 @@ export class ClientOrderService {
                     })
 
                     if (!selectedSize || selectedSize.productVariant.id !== variant.id) {
-                        throw new BadRequestException(`Size ${item.sizeId} is not available for product variant ${item.productVariantId}`)
+                        throw new BadRequestException(
+                            `Size ${item.sizeId} is not available for product variant ${item.productVariantId}`
+                        )
                     }
 
                     const availableQty = Number(selectedSize.qty || 0) - Number(selectedSize.reservedQty || 0)
                     if (availableQty < item.qty) {
-                        throw new BadRequestException(`Only ${Math.max(availableQty, 0)} item(s) left for selected size`)
+                        throw new BadRequestException(
+                            `Only ${Math.max(availableQty, 0)} item(s) left for selected size`
+                        )
                     }
 
                     selectedSize.reservedQty = Number(selectedSize.reservedQty || 0) + item.qty
@@ -384,7 +392,9 @@ export class ClientOrderService {
                 await clientRepository.save(client)
             }
 
-            const bonusEarned = authenticatedClientId ? this.calculateBonusEarned(Math.max(afterPromoTotal - bonusSpent, 0)) : 0
+            const bonusEarned = authenticatedClientId
+                ? this.calculateBonusEarned(Math.max(afterPromoTotal - bonusSpent, 0))
+                : 0
 
             let order = orderRepository.create({
                 status: orderStatus,
@@ -559,7 +569,12 @@ export class ClientOrderService {
         return this.enrichOrderForClient(order)
     }
 
-    async cancelForClient(id: number, authenticatedClientId: number | undefined, accessToken: string | undefined, reason?: string) {
+    async cancelForClient(
+        id: number,
+        authenticatedClientId: number | undefined,
+        accessToken: string | undefined,
+        reason?: string
+    ) {
         const order = await this.orderRepository.findOne({
             where: {id},
             relations: {status: true, client: true}

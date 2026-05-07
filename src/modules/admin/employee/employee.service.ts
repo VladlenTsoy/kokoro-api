@@ -19,11 +19,15 @@ export class EmployeeService {
     ) {}
 
     private sanitize(employee: EmployeeEntity) {
-        const {passwordHash, passwordSalt, ...safeEmployee} = employee
+        const {passwordHash: _passwordHash, passwordSalt: _passwordSalt, ...safeEmployee} = employee
         const roleCodes = (employee.roles || []).filter((role) => role.isActive).map((role) => role.code)
         const permissions = isSuperAdmin(roleCodes)
             ? ALL_ADMIN_PERMISSION_CODES
-            : Array.from(new Set((employee.roles || []).filter((role) => role.isActive).flatMap((role) => role.permissions || [])))
+            : Array.from(
+                  new Set(
+                      (employee.roles || []).filter((role) => role.isActive).flatMap((role) => role.permissions || [])
+                  )
+              )
 
         return {
             ...safeEmployee,
@@ -88,7 +92,9 @@ export class EmployeeService {
         if (!employee) throw new NotFoundException("Employee not found")
 
         if (updateEmployeeDto.email && updateEmployeeDto.email.toLowerCase().trim() !== employee.email) {
-            const existing = await this.employeeRepository.findOneBy({email: updateEmployeeDto.email.toLowerCase().trim()})
+            const existing = await this.employeeRepository.findOneBy({
+                email: updateEmployeeDto.email.toLowerCase().trim()
+            })
             if (existing) {
                 throw new ConflictException("Employee with this email already exists")
             }
