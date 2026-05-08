@@ -443,6 +443,8 @@ export class ClientProductVariantService {
                 "color.hex",
                 "sizes.id",
                 "sizes.qty",
+                "sizes.reservedQty",
+                "sizes.soldQty",
                 "sizes.cost_price",
                 "sizes.min_qty",
                 "size.id",

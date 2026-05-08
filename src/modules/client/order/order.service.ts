@@ -298,6 +298,11 @@ export class ClientOrderService {
                 if (!variant) {
                     throw new NotFoundException(`Product variant ${item.productVariantId} not found`)
                 }
+                if (variant.status_id !== 2) {
+                    throw new BadRequestException(
+                        `Product variant ${item.productVariantId} is not available for checkout`
+                    )
+                }
 
                 const basePrice = Number(variant.price)
                 const discountActive = this.isDiscountActive(variant.discount)
