@@ -52,6 +52,12 @@ export class FilterAdminOrdersDto {
     @IsBoolean()
     problemOnly?: boolean
 
+    @ApiPropertyOptional({default: false})
+    @IsOptional()
+    @Type(() => Boolean)
+    @IsBoolean()
+    attentionOnly?: boolean
+
     @ApiPropertyOptional({default: 1})
     @IsOptional()
     @Type(() => Number)

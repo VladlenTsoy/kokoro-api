@@ -115,6 +115,62 @@ export class OrderService {
         return new Date(Date.now() - 10 * 60 * 1000)
     }
 
+    private getSlaThresholdMinutes(deliveryStatus?: OrderDeliveryStatus | null) {
+        if (deliveryStatus === OrderDeliveryStatus.PENDING) return 15
+        if (deliveryStatus === OrderDeliveryStatus.PREPARING) return 30
+        if (deliveryStatus === OrderDeliveryStatus.READY || deliveryStatus === OrderDeliveryStatus.DELIVERING) return 60
+        return null
+    }
+
+    private getOrderSlaSnapshot(order: OrderEntity, lastStatusChangedAt?: Date | string | null) {
+        const thresholdMinutes = this.getSlaThresholdMinutes(order.deliveryStatus)
+        const statusChangedAt = lastStatusChangedAt ? new Date(lastStatusChangedAt) : order.createdAt
+        const ageMinutes = Math.max(Math.floor((Date.now() - statusChangedAt.getTime()) / 60000), 0)
+
+        if (!thresholdMinutes) {
+            return {
+                lastStatusChangedAt: statusChangedAt,
+                ageMinutes,
+                thresholdMinutes: null,
+                state: null
+            }
+        }
+
+        let state: "new" | "waiting" | "stuck" = "new"
+        if (ageMinutes >= thresholdMinutes * 2) state = "stuck"
+        else if (ageMinutes >= thresholdMinutes) state = "waiting"
+
+        return {
+            lastStatusChangedAt: statusChangedAt,
+            ageMinutes,
+            thresholdMinutes,
+            state
+        }
+    }
+
+    private lastStatusChangedAtSql() {
+        return `(SELECT MAX(history.changedAt) FROM order_status_histories history WHERE history.orderId = order.id)`
+    }
+
+    private applyAttentionOrdersCondition(query: ReturnType<Repository<OrderEntity>["createQueryBuilder"]>) {
+        const lastStatusChangedAt = `COALESCE(${this.lastStatusChangedAtSql()}, order.createdAt)`
+        query.andWhere(
+            `(
+                (order.deliveryStatus = :pending AND ${lastStatusChangedAt} <= :pendingThreshold)
+                OR (order.deliveryStatus = :preparing AND ${lastStatusChangedAt} <= :preparingThreshold)
+                OR (order.deliveryStatus IN (:...readyStatuses) AND ${lastStatusChangedAt} <= :readyThreshold)
+            )`,
+            {
+                pending: OrderDeliveryStatus.PENDING,
+                preparing: OrderDeliveryStatus.PREPARING,
+                readyStatuses: [OrderDeliveryStatus.READY, OrderDeliveryStatus.DELIVERING],
+                pendingThreshold: new Date(Date.now() - 15 * 60 * 1000),
+                preparingThreshold: new Date(Date.now() - 30 * 60 * 1000),
+                readyThreshold: new Date(Date.now() - 60 * 60 * 1000)
+            }
+        )
+    }
+
     private applyProblemOrdersCondition(query: ReturnType<Repository<OrderEntity>["createQueryBuilder"]>) {
         query.andWhere(
             `(
@@ -376,8 +432,20 @@ export class OrderService {
             query.andWhere("order.createdAt >= :from", {from: this.parseDateFilter(filters.from, "start")})
         if (filters.to) query.andWhere("order.createdAt <= :to", {to: this.parseDateFilter(filters.to, "end")})
         if (filters.problemOnly) this.applyProblemOrdersCondition(query)
+        if (filters.attentionOnly) this.applyAttentionOrdersCondition(query)
 
-        const [items, total] = await query.orderBy("order.id", "DESC").skip(skip).take(pageSize).getManyAndCount()
+        const total = await query.clone().getCount()
+        const {entities, raw} = await query
+            .addSelect(this.lastStatusChangedAtSql(), "lastStatusChangedAt")
+            .orderBy("order.id", "DESC")
+            .skip(skip)
+            .take(pageSize)
+            .getRawAndEntities()
+
+        const items = entities.map((order, index) => ({
+            ...order,
+            sla: this.getOrderSlaSnapshot(order, raw[index]?.lastStatusChangedAt)
+        }))
 
         return {items, total, page, pageSize}
     }
