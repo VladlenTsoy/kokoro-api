@@ -7,6 +7,7 @@ import {AdminModule} from "./modules/admin/admin.module"
 import {ClientModule} from "./modules/client/client.module"
 import {typeOrmAsyncConfig} from "./config/typeorm.config"
 import {PaymeModule} from "./modules/payme/payme.module"
+import {SearchZeroResultModule} from "./modules/search-zero-result/search-zero-result.module"
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import {PaymeModule} from "./modules/payme/payme.module"
         }),
         TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
         PaymeModule,
+        SearchZeroResultModule,
         AdminModule,
         ClientModule
     ],

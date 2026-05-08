@@ -159,6 +159,7 @@ function moduleFromPath(path: string): AdminPermissionModuleCode | null {
     if (path.startsWith("/admin/orders")) return "orders"
     if (path.startsWith("/admin/clients")) return "clients"
     if (path.startsWith("/admin/promo-codes")) return "marketing"
+    if (path.startsWith("/admin/search-zero-results")) return "catalog"
     if (path.startsWith("/admin/image")) return "files"
     if (path.startsWith("/admin/roles") || path.startsWith("/admin/employees")) return "staff"
     if (
