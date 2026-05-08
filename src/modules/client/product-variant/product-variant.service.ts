@@ -137,6 +137,7 @@ export class ClientProductVariantService {
         page,
         pageSize,
         sortOrder,
+        search,
         categoryId,
         colorIds,
         sizeIds,
@@ -146,6 +147,7 @@ export class ClientProductVariantService {
         page?: number
         pageSize?: number
         sortOrder?: string
+        search?: string
         categoryId?: number
         colorIds?: number[]
         sizeIds?: number[]
@@ -169,6 +171,7 @@ export class ClientProductVariantService {
         const normalizedTagSlugs = Array.isArray(tagSlugs)
             ? tagSlugs.map((slug) => slug.trim().toLowerCase()).filter(Boolean)
             : []
+        const normalizedSearch = search?.trim()
 
         if (categoryId && (!categoryIds || categoryIds.length === 0)) {
             return {items: [], total: 0}
@@ -182,6 +185,14 @@ export class ClientProductVariantService {
         if (categoryIds && categoryIds.length > 0) {
             countQb.leftJoin("pv.product", "product")
             countQb.andWhere("product.category_id IN (:...categoryIds)", {categoryIds})
+        }
+        if (normalizedSearch) {
+            countQb.andWhere(
+                "(pv.title LIKE :search OR pv.description LIKE :search OR CAST(pv.id AS CHAR) LIKE :search)",
+                {
+                    search: `%${normalizedSearch}%`
+                }
+            )
         }
         if (normalizedColorIds.length > 0) {
             countQb.andWhere("pv.color_id IN (:...colorIds)", {colorIds: normalizedColorIds})
@@ -219,6 +230,14 @@ export class ClientProductVariantService {
         if (categoryIds && categoryIds.length > 0) {
             idsQb.leftJoin("pv.product", "product")
             idsQb.andWhere("product.category_id IN (:...categoryIds)", {categoryIds})
+        }
+        if (normalizedSearch) {
+            idsQb.andWhere(
+                "(pv.title LIKE :search OR pv.description LIKE :search OR CAST(pv.id AS CHAR) LIKE :search)",
+                {
+                    search: `%${normalizedSearch}%`
+                }
+            )
         }
         if (normalizedColorIds.length > 0) {
             idsQb.andWhere("pv.color_id IN (:...colorIds)", {colorIds: normalizedColorIds})
