@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common"
+import {BadRequestException, Injectable, Logger, NotFoundException} from "@nestjs/common"
 import {InjectRepository} from "@nestjs/typeorm"
 import {Repository} from "typeorm"
 import {
@@ -15,6 +15,8 @@ const DEFAULT_SCOPES = ["customers", "products", "categories", "branches", "orde
 
 @Injectable()
 export class IntegrationService {
+    private readonly logger = new Logger(IntegrationService.name)
+
     constructor(
         @InjectRepository(IntegrationSettingEntity)
         private readonly settingsRepo: Repository<IntegrationSettingEntity>,
@@ -89,20 +91,25 @@ export class IntegrationService {
     }
 
     async enqueue(providerKey: IntegrationProviderKey, eventName: string, payload: Record<string, unknown>) {
-        const integration = await this.settingsRepo.findOneBy({providerKey})
-        if (!integration || !this.canDeliver(integration, eventName)) return null
+        try {
+            const integration = await this.settingsRepo.findOneBy({providerKey})
+            if (!integration || !this.canDeliver(integration, eventName)) return null
 
-        const eventId = String(payload.eventId || `${eventName}-${Date.now()}-${Math.random().toString(16).slice(2)}`)
-        return this.outboxRepo.save(
-            this.outboxRepo.create({
-                providerKey,
-                eventName,
-                eventId,
-                idempotencyKey: String(payload.idempotencyKey || eventId),
-                payload,
-                status: IntegrationOutboxStatus.PENDING
-            })
-        )
+            const eventId = String(payload.eventId || `${eventName}-${Date.now()}-${Math.random().toString(16).slice(2)}`)
+            return await this.outboxRepo.save(
+                this.outboxRepo.create({
+                    providerKey,
+                    eventName,
+                    eventId,
+                    idempotencyKey: String(payload.idempotencyKey || eventId),
+                    payload,
+                    status: IntegrationOutboxStatus.PENDING
+                })
+            )
+        } catch (error) {
+            this.logger.warn(`Failed to enqueue ${providerKey}:${eventName}: ${(error as Error).message}`)
+            return null
+        }
     }
 
     private async ensureDefaults() {
@@ -140,7 +147,8 @@ export class IntegrationService {
     private isConfigured(integration: IntegrationSettingEntity) {
         if (integration.providerKey === IntegrationProviderKey.DATRA_CDP) {
             const secrets = this.secretService.decryptJson(integration.secretConfigEncrypted)
-            return Boolean(secrets?.apiToken)
+            const publicConfig = integration.publicConfig || {}
+            return Boolean(secrets?.apiToken && (publicConfig.endpointUrl || publicConfig.apiUrl || publicConfig.url))
         }
         return true
     }
@@ -153,6 +161,8 @@ export class IntegrationService {
         if (eventName.startsWith("order")) return scopes.includes("orders")
         if (eventName.startsWith("customer")) return scopes.includes("customers")
         if (eventName.startsWith("product")) return scopes.includes("products")
+        if (eventName.startsWith("category")) return scopes.includes("categories")
+        if (eventName.startsWith("branch")) return scopes.includes("branches")
         return scopes.includes("events")
     }
 

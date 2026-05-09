@@ -6,9 +6,10 @@ import {ClientEntity} from "./entities/client.entity"
 import {OrderEntity} from "../order/entities/order.entity"
 import {ClientAddressEntity} from "../client-address/entities/client-address.entity"
 import {ClientBonusTransactionEntity} from "./entities/client-bonus-transaction.entity"
+import {IntegrationModule} from "../integration/integration.module"
 
 @Module({
-    imports: [TypeOrmModule.forFeature([ClientEntity, OrderEntity, ClientAddressEntity, ClientBonusTransactionEntity])],
+    imports: [TypeOrmModule.forFeature([ClientEntity, OrderEntity, ClientAddressEntity, ClientBonusTransactionEntity]), IntegrationModule],
     controllers: [ClientController],
     providers: [ClientService],
     exports: [ClientService]

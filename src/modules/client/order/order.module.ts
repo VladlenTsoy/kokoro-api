@@ -18,11 +18,13 @@ import {ProductVariantSizeEntity} from "../../admin/product-variant-size/entitie
 import {PromoCodeEntity} from "../../admin/promo-code/entities/promo-code.entity"
 import {ClientBonusTransactionEntity} from "../../admin/client/entities/client-bonus-transaction.entity"
 import {PaymeModule} from "../../payme/payme.module"
+import {IntegrationModule} from "../../admin/integration/integration.module"
 
 @Module({
     imports: [
         ClientAuthModule,
         PaymeModule,
+        IntegrationModule,
         TypeOrmModule.forFeature([
             ClientEntity,
             ClientAddressEntity,

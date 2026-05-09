@@ -8,6 +8,8 @@ import {FilterAdminClientsDto} from "./dto/filter-admin-clients.dto"
 import {UpdateAdminClientDto} from "./dto/update-admin-client.dto"
 import {MergeClientsDto} from "./dto/merge-clients.dto"
 import {ClientBonusTransactionEntity} from "./entities/client-bonus-transaction.entity"
+import {IntegrationService} from "../integration/integration.service"
+import {IntegrationProviderKey} from "../integration/entities/integration-setting.entity"
 
 @Injectable()
 export class ClientService {
@@ -20,8 +22,32 @@ export class ClientService {
         @InjectRepository(ClientAddressEntity)
         private readonly addressRepository: Repository<ClientAddressEntity>,
         @InjectRepository(ClientBonusTransactionEntity)
-        private readonly bonusTransactionRepository: Repository<ClientBonusTransactionEntity>
+        private readonly bonusTransactionRepository: Repository<ClientBonusTransactionEntity>,
+        private readonly integrationService: IntegrationService
     ) {}
+
+    private buildCustomerIntegrationPayload(client: ClientEntity, eventName: string) {
+        return {
+            eventId: `${eventName}-kokoro-client-${client.id}`,
+            idempotencyKey: `${eventName}-kokoro-client-${client.id}-${Date.now()}`,
+            externalId: `kokoro-client-${client.id}`,
+            customerId: client.id,
+            name: client.name,
+            phone: client.phone,
+            isActive: client.isActive,
+            bonusBalance: client.bonusBalance,
+            createdAt: client.createdAt,
+            lastLoginAt: client.lastLoginAt || null
+        }
+    }
+
+    private async enqueueDatraCustomerEvent(client: ClientEntity, eventName: string) {
+        await this.integrationService.enqueue(
+            IntegrationProviderKey.DATRA_CDP,
+            eventName,
+            this.buildCustomerIntegrationPayload(client, eventName)
+        )
+    }
 
     private normalizePagination(page?: number, pageSize?: number) {
         const safePage = Number(page) > 0 ? Number(page) : 1
@@ -94,7 +120,8 @@ export class ClientService {
         if (dto.name !== undefined) client.name = dto.name.trim()
         if (dto.phone !== undefined) client.phone = dto.phone.trim()
         if (dto.isActive !== undefined) client.isActive = dto.isActive
-        await this.clientRepository.save(client)
+        const saved = await this.clientRepository.save(client)
+        await this.enqueueDatraCustomerEvent(saved, "customer_updated")
         return this.findOne(id)
     }
 

@@ -25,6 +25,8 @@ import {
     ClientBonusTransactionEntity,
     ClientBonusTransactionType
 } from "../../admin/client/entities/client-bonus-transaction.entity"
+import {IntegrationService} from "../../admin/integration/integration.service"
+import {IntegrationProviderKey} from "../../admin/integration/entities/integration-setting.entity"
 
 @Injectable()
 export class ClientOrderService {
@@ -35,8 +37,64 @@ export class ClientOrderService {
         @InjectRepository(OrderEntity)
         private readonly orderRepository: Repository<OrderEntity>,
         @InjectRepository(OrderStatusHistoryEntity)
-        private readonly historyRepository: Repository<OrderStatusHistoryEntity>
+        private readonly historyRepository: Repository<OrderStatusHistoryEntity>,
+        private readonly integrationService: IntegrationService
     ) {}
+
+    private buildCustomerIntegrationPayload(client: ClientEntity, eventName: string) {
+        return {
+            eventId: `${eventName}-kokoro-client-${client.id}`,
+            idempotencyKey: `${eventName}-kokoro-client-${client.id}-${Date.now()}`,
+            externalId: `kokoro-client-${client.id}`,
+            customerId: client.id,
+            name: client.name,
+            phone: client.phone,
+            isActive: client.isActive,
+            bonusBalance: client.bonusBalance,
+            createdAt: client.createdAt,
+            lastLoginAt: client.lastLoginAt || null
+        }
+    }
+
+    private buildOrderIntegrationPayload(order: OrderEntity, eventName: string) {
+        return {
+            eventId: `${eventName}-${order.id}-${Date.now()}`,
+            idempotencyKey: `${eventName}-${order.id}-${order.updatedAt?.getTime?.() || Date.now()}`,
+            orderId: order.id,
+            externalId: `kokoro-order-${order.id}`,
+            orderNumber: order.orderNumber,
+            customerExternalId: order.client?.id ? `kokoro-client-${order.client.id}` : undefined,
+            phone: order.phone || order.client?.phone,
+            clientName: order.clientName || order.client?.name,
+            status: order.deliveryStatus,
+            paymentStatus: order.paymentStatus,
+            total: order.total,
+            subtotal: order.subtotal,
+            discountTotal: order.discountTotal,
+            deliveryPrice: order.deliveryPrice,
+            promoCode: order.promoCode,
+            sourcePlatform: order.source?.title || "client",
+            createdAt: order.createdAt,
+            completedAt: order.completedAt,
+            cancelledAt: order.cancelledAt
+        }
+    }
+
+    private async enqueueDatraCustomerEvent(client: ClientEntity, eventName: string) {
+        await this.integrationService.enqueue(
+            IntegrationProviderKey.DATRA_CDP,
+            eventName,
+            this.buildCustomerIntegrationPayload(client, eventName)
+        )
+    }
+
+    private async enqueueDatraOrderEvent(order: OrderEntity, eventName: string) {
+        await this.integrationService.enqueue(
+            IntegrationProviderKey.DATRA_CDP,
+            eventName,
+            this.buildOrderIntegrationPayload(order, eventName)
+        )
+    }
 
     private normalizePhone(phone: string) {
         return phone.replace(/\s+/g, "").trim()
@@ -206,6 +264,7 @@ export class ClientOrderService {
             const bonusTransactionRepository = manager.getRepository(ClientBonusTransactionEntity)
 
             let client: ClientEntity | null = null
+            let createdClient = false
             let phone: string | null = null
             let clientName: string | null = null
 
@@ -229,6 +288,7 @@ export class ClientOrderService {
                         phone
                     })
                     client = await clientRepository.save(client)
+                    createdClient = true
                 } else if (client.name !== guestClient.name) {
                     client.name = guestClient.name
                     client = await clientRepository.save(client)
@@ -498,11 +558,11 @@ export class ClientOrderService {
                 await orderItemRepository.save(orderItem)
             }
 
-            return order.id
+            return {orderId: order.id, createdClientId: createdClient ? client.id : null}
         })
 
         const order = await this.orderRepository.findOne({
-            where: {id: result},
+            where: {id: result.orderId},
             relations: {
                 status: true,
                 paymentMethod: true,
@@ -523,6 +583,13 @@ export class ClientOrderService {
                 }
             }
         })
+
+        if (order?.client && result.createdClientId) {
+            await this.enqueueDatraCustomerEvent(order.client, "customer_created")
+        }
+        if (order) {
+            await this.enqueueDatraOrderEvent(order, "order_created")
+        }
 
         return this.enrichOrderForClient(order)
     }
@@ -666,6 +733,7 @@ export class ClientOrderService {
                 visibleForClient: true
             })
         )
+        await this.enqueueDatraOrderEvent(order, "order_cancelled")
 
         return this.findOneForClient(id, authenticatedClientId, accessToken)
     }

@@ -5,13 +5,16 @@ import {ProductEntity} from "./entities/product.entity"
 import {CreateProductDto} from "./dto/create-product.dto"
 import {UpdateProductDto} from "./dto/update-product.dto"
 import {ProductPropertyService} from "../product-property/product-property.service"
+import {IntegrationService} from "../integration/integration.service"
+import {IntegrationProviderKey} from "../integration/entities/integration-setting.entity"
 
 @Injectable()
 export class ProductService {
     constructor(
         @InjectRepository(ProductEntity)
         private readonly productRepository: Repository<ProductEntity>,
-        private readonly productPropertyService: ProductPropertyService
+        private readonly productPropertyService: ProductPropertyService,
+        private readonly integrationService: IntegrationService
     ) {}
 
     /**
@@ -20,6 +23,26 @@ export class ProductService {
      */
     private errorNotFound() {
         throw new NotFoundException("The product was not found")
+    }
+
+    private buildProductIntegrationPayload(product: ProductEntity, eventName: string) {
+        return {
+            eventId: `${eventName}-kokoro-product-${product.id}`,
+            idempotencyKey: `${eventName}-kokoro-product-${product.id}-${Date.now()}`,
+            externalId: `kokoro-product-${product.id}`,
+            productId: product.id,
+            categoryExternalId: product.category_id ? `kokoro-category-${product.category_id}` : null,
+            categoryId: product.category_id,
+            createdAt: product.created_at
+        }
+    }
+
+    private async enqueueDatraProductEvent(product: ProductEntity, eventName: string) {
+        await this.integrationService.enqueue(
+            IntegrationProviderKey.DATRA_CDP,
+            eventName,
+            this.buildProductIntegrationPayload(product, eventName)
+        )
     }
 
     async create(createProductDto: CreateProductDto) {
@@ -32,6 +55,7 @@ export class ProductService {
         }
 
         await this.productRepository.save(product)
+        await this.enqueueDatraProductEvent(product, "product_created")
         return product
     }
 
@@ -44,7 +68,9 @@ export class ProductService {
             product.category_id = updateProductDto.category_id
         }
         // Save product
-        return this.productRepository.save(product)
+        const saved = await this.productRepository.save(product)
+        await this.enqueueDatraProductEvent(saved, "product_updated")
+        return saved
     }
 
     async removeById(id: number) {
