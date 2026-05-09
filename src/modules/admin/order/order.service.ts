@@ -24,6 +24,8 @@ import {
     ClientBonusTransactionEntity,
     ClientBonusTransactionType
 } from "../client/entities/client-bonus-transaction.entity"
+import {IntegrationService} from "../integration/integration.service"
+import {IntegrationProviderKey} from "../integration/entities/integration-setting.entity"
 
 @Injectable()
 export class OrderService {
@@ -52,7 +54,8 @@ export class OrderService {
         private readonly clientRepo: Repository<ClientEntity>,
         @InjectRepository(ClientBonusTransactionEntity)
         private readonly bonusTransactionRepo: Repository<ClientBonusTransactionEntity>,
-        private readonly notificationService: OrderStatusNotificationService
+        private readonly notificationService: OrderStatusNotificationService,
+        private readonly integrationService: IntegrationService
     ) {}
 
     private readonly orderRelations = {
@@ -85,6 +88,38 @@ export class OrderService {
 
     private buildOrderNumber(orderId: number) {
         return `KO-${String(orderId).padStart(6, "0")}`
+    }
+
+    private buildOrderIntegrationPayload(order: OrderEntity, eventName: string) {
+        return {
+            eventId: `${eventName}-${order.id}-${Date.now()}`,
+            idempotencyKey: `${eventName}-${order.id}-${order.updatedAt?.getTime?.() || Date.now()}`,
+            orderId: order.id,
+            externalId: order.orderNumber || String(order.id),
+            orderNumber: order.orderNumber,
+            customerExternalId: order.client?.id ? String(order.client.id) : undefined,
+            phone: order.phone || order.client?.phone,
+            clientName: order.clientName || order.client?.name,
+            status: order.deliveryStatus,
+            paymentStatus: order.paymentStatus,
+            total: order.total,
+            subtotal: order.subtotal,
+            discountTotal: order.discountTotal,
+            deliveryPrice: order.deliveryPrice,
+            promoCode: order.promoCode,
+            sourcePlatform: order.source?.title || "admin",
+            createdAt: order.createdAt,
+            completedAt: order.completedAt,
+            cancelledAt: order.cancelledAt
+        }
+    }
+
+    private async enqueueDatraOrderEvent(order: OrderEntity, eventName: string) {
+        await this.integrationService.enqueue(
+            IntegrationProviderKey.DATRA_CDP,
+            eventName,
+            this.buildOrderIntegrationPayload(order, eventName)
+        )
     }
 
     private normalizePagination(page?: number, pageSize?: number) {
@@ -349,7 +384,9 @@ export class OrderService {
             })
         )
 
-        return this.findOne(entity.id)
+        const createdOrder = await this.findOne(entity.id)
+        await this.enqueueDatraOrderEvent(createdOrder, "order_created")
+        return createdOrder
     }
 
     findAll() {
@@ -540,7 +577,9 @@ export class OrderService {
                 visibleForClient: dto.visibleForClient !== false
             })
         )
-        await this.notificationService.enqueueForOrderStatus(await this.getOrderOrFail(id), nextStatus)
+        const updatedOrder = await this.getOrderOrFail(id)
+        await this.notificationService.enqueueForOrderStatus(updatedOrder, nextStatus)
+        await this.enqueueDatraOrderEvent(updatedOrder, "order_status_changed")
 
         return this.findOne(id)
     }
@@ -573,7 +612,9 @@ export class OrderService {
                 visibleForClient: true
             })
         )
-        await this.notificationService.enqueueForOrderStatus(await this.getOrderOrFail(id), order.status)
+        const cancelledOrder = await this.getOrderOrFail(id)
+        await this.notificationService.enqueueForOrderStatus(cancelledOrder, order.status)
+        await this.enqueueDatraOrderEvent(cancelledOrder, "order_cancelled")
 
         return this.findOne(id)
     }

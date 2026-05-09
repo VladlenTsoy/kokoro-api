@@ -33,6 +33,7 @@ import {AdminRolesGuard} from "./auth/guards/admin-roles.guard"
 import {CollectionModule} from "./collection/collection.module"
 import {AdminClientModule} from "./client/client.module"
 import {PromoCodeModule} from "./promo-code/promo-code.module"
+import {IntegrationModule} from "./integration/integration.module"
 
 @Module({
     imports: [
@@ -66,7 +67,8 @@ import {PromoCodeModule} from "./promo-code/promo-code.module"
         AuthModule,
         CollectionModule,
         AdminClientModule,
-        PromoCodeModule
+        PromoCodeModule,
+        IntegrationModule
     ],
     providers: [
         AppService,

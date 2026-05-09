@@ -18,10 +18,12 @@ import {OrderStatusTransitionEntity} from "../order-status/entities/order-status
 import {OrderStatusNotificationModule} from "../order-status-notification/order-status-notification.module"
 import {ProductVariantSizeEntity} from "../product-variant-size/entities/product-variant-size.entity"
 import {ClientBonusTransactionEntity} from "../client/entities/client-bonus-transaction.entity"
+import {IntegrationModule} from "../integration/integration.module"
 
 @Module({
     imports: [
         OrderStatusNotificationModule,
+        IntegrationModule,
         TypeOrmModule.forFeature([
             OrderEntity,
             OrderStatusEntity,
