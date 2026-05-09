@@ -290,7 +290,7 @@ export class ClientOrderService {
             }> = []
 
             for (const item of dto.items) {
-                const variant = await productVariantRepository.findOne({
+                let variant = await productVariantRepository.findOne({
                     where: {id: item.productVariantId},
                     relations: {discount: true, color: true, product: true, images: true, sizes: {size: true}}
                 })
@@ -337,6 +337,26 @@ export class ClientOrderService {
 
                     selectedSize.reservedQty = Number(selectedSize.reservedQty || 0) + item.qty
                     await productVariantSizeRepository.save(selectedSize)
+                } else if (variant.qty !== null && variant.qty !== undefined) {
+                    const lockedVariant = await productVariantRepository.findOne({
+                        where: {id: variant.id},
+                        relations: {discount: true, color: true, product: true, images: true, sizes: {size: true}},
+                        lock: {mode: "pessimistic_write"}
+                    })
+                    if (!lockedVariant) {
+                        throw new NotFoundException(`Product variant ${item.productVariantId} not found`)
+                    }
+
+                    const availableQty = Number(lockedVariant.qty || 0) - Number(lockedVariant.reservedQty || 0)
+                    if (availableQty < item.qty) {
+                        throw new BadRequestException(
+                            `Only ${Math.max(availableQty, 0)} item(s) left for selected product variant`
+                        )
+                    }
+
+                    lockedVariant.reservedQty = Number(lockedVariant.reservedQty || 0) + item.qty
+                    await productVariantRepository.save(lockedVariant)
+                    variant = lockedVariant
                 }
 
                 preparedItems.push({
@@ -617,15 +637,24 @@ export class ClientOrderService {
         }
         const items = await this.orderRepository.findOne({
             where: {id},
-            relations: {items: {size: true}}
+            relations: {items: {productVariant: true, size: true}}
         })
         const sizeRepository = this.dataSource.getRepository(ProductVariantSizeEntity)
+        const productVariantRepository = this.dataSource.getRepository(ProductVariantEntity)
         for (const item of items?.items || []) {
-            if (!item.size) continue
-            const variantSize = await sizeRepository.findOneBy({id: item.size.id})
-            if (!variantSize) continue
-            variantSize.reservedQty = Math.max(Number(variantSize.reservedQty || 0) - item.qty, 0)
-            await sizeRepository.save(variantSize)
+            if (item.size) {
+                const variantSize = await sizeRepository.findOneBy({id: item.size.id})
+                if (!variantSize) continue
+                variantSize.reservedQty = Math.max(Number(variantSize.reservedQty || 0) - item.qty, 0)
+                await sizeRepository.save(variantSize)
+                continue
+            }
+
+            if (!item.productVariant) continue
+            const variant = await productVariantRepository.findOneBy({id: item.productVariant.id})
+            if (!variant || variant.qty === null || variant.qty === undefined) continue
+            variant.reservedQty = Math.max(Number(variant.reservedQty || 0) - item.qty, 0)
+            await productVariantRepository.save(variant)
         }
         await this.historyRepository.save(
             this.historyRepository.create({

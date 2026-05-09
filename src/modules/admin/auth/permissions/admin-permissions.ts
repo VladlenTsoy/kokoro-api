@@ -99,6 +99,12 @@ export const ALL_ADMIN_PERMISSION_CODES = ADMIN_PERMISSION_CATALOG.flatMap((modu
 const ALL_ADMIN_PERMISSION_CODE_SET = new Set<string>(ALL_ADMIN_PERMISSION_CODES)
 
 const LEGACY_ADMIN_PREFIXES = [
+    "/orders",
+    "/order-items",
+    "/order-addresses",
+    "/order-statuses",
+    "/payment-method",
+    "/order-status-notifications",
     "/cities",
     "/delivery-types",
     "/sources",
@@ -169,6 +175,16 @@ function moduleFromPath(path: string): AdminPermissionModuleCode | null {
     if (path.startsWith("/admin/search-zero-results")) return "catalog"
     if (path.startsWith("/admin/image")) return "files"
     if (path.startsWith("/admin/roles") || path.startsWith("/admin/employees")) return "staff"
+    if (
+        path.startsWith("/orders") ||
+        path.startsWith("/order-items") ||
+        path.startsWith("/order-addresses") ||
+        path.startsWith("/order-statuses") ||
+        path.startsWith("/order-status-notifications")
+    ) {
+        return "orders"
+    }
+    if (path.startsWith("/payment-method")) return "settings"
     if (
         path.startsWith("/admin/product") ||
         path.startsWith("/admin/color") ||

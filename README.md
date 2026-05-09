@@ -47,7 +47,27 @@ AWS_BUCKET_NAME=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_ROOT_PATH=
+
+# Admin auth / launch security
+ADMIN_AUTH_SECRET=change-me-32-byte-minimum-random-secret
+ADMIN_TOKEN_EXPIRES_IN_MINUTES=480
+ADMIN_REFRESH_TOKEN_EXPIRES_IN_DAYS=30
+ADMIN_PASSWORD_ITERATIONS=210000
+CLIENT_AUTH_SECRET=change-me-client-secret
+CLIENT_SECRET_ITERATIONS=210000
+INTEGRATION_SECRET=change-me-integration-secret
+
+# Payme
+PAYME_LOGIN=Paycom
+PAYME_KEY=change-me-payme-key
+PAYME_MERCHANT_ID=change-me-merchant-id
+PAYME_ACCOUNT_FIELD=order_id
+PAYME_CHECKOUT_URL=https://checkout.paycom.uz
+PAYME_RETURN_URL=https://kokoro.uz/orders
+PAYME_CALLBACK_TIMEOUT_MS=15000
 ```
+
+Перед запуском production/launch-среды обязательно замените все `change-me-*` значения. Legacy operational endpoints (`/orders`, `/order-items`, `/order-addresses`, `/order-statuses`, `/payment-method`, `/order-status-notifications`) защищены admin Bearer-токеном; публичные client и Payme endpoints остаются отдельными.
 
 ### Запуск Docker Контейнеров
 

@@ -55,6 +55,18 @@ export class ProductVariantEntity {
     @Column({type: "int"})
     price: number
 
+    @ApiProperty({example: 100, description: "Direct stock quantity for variants without sizes", required: false})
+    @Column({type: "int", nullable: true})
+    qty?: number | null
+
+    @ApiProperty({example: 5, description: "Quantity reserved by active orders for variants without sizes", required: false})
+    @Column({type: "int", default: 0})
+    reservedQty: number
+
+    @ApiProperty({example: 20, description: "Quantity sold through completed orders for variants without sizes", required: false})
+    @Column({type: "int", default: 0})
+    soldQty: number
+
     @ApiProperty({
         example: 1,
         description: "The product_id of the product variant",

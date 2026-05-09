@@ -17,6 +17,7 @@ import {EmployeeEntity} from "../employee/entities/employee.entity"
 import {OrderStatusTransitionEntity} from "../order-status/entities/order-status-transition.entity"
 import {OrderStatusNotificationModule} from "../order-status-notification/order-status-notification.module"
 import {ProductVariantSizeEntity} from "../product-variant-size/entities/product-variant-size.entity"
+import {ProductVariantEntity} from "../product-variant/entities/product-variant.entity"
 import {ClientBonusTransactionEntity} from "../client/entities/client-bonus-transaction.entity"
 import {IntegrationModule} from "../integration/integration.module"
 
@@ -38,6 +39,7 @@ import {IntegrationModule} from "../integration/integration.module"
             EmployeeEntity,
             OrderStatusTransitionEntity,
             ProductVariantSizeEntity,
+            ProductVariantEntity,
             ClientBonusTransactionEntity
         ])
     ],

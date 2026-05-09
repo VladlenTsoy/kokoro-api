@@ -18,6 +18,7 @@ import {CreateOrderCommentDto} from "./dto/create-order-comment.dto"
 import {CancelOrderDto} from "./dto/cancel-order.dto"
 import {OrderStatusTransitionEntity} from "../order-status/entities/order-status-transition.entity"
 import {ProductVariantSizeEntity} from "../product-variant-size/entities/product-variant-size.entity"
+import {ProductVariantEntity} from "../product-variant/entities/product-variant.entity"
 import {OrderStatusNotificationService} from "../order-status-notification/order-status-notification.service"
 import {ClientEntity} from "../client/entities/client.entity"
 import {
@@ -50,6 +51,8 @@ export class OrderService {
         private readonly transitionRepo: Repository<OrderStatusTransitionEntity>,
         @InjectRepository(ProductVariantSizeEntity)
         private readonly productVariantSizeRepo: Repository<ProductVariantSizeEntity>,
+        @InjectRepository(ProductVariantEntity)
+        private readonly productVariantRepo: Repository<ProductVariantEntity>,
         @InjectRepository(ClientEntity)
         private readonly clientRepo: Repository<ClientEntity>,
         @InjectRepository(ClientBonusTransactionEntity)
@@ -269,22 +272,36 @@ export class OrderService {
             where: {id: order.id},
             relations: {
                 items: {
+                    productVariant: true,
                     size: true
                 }
             }
         })
 
         for (const item of fullOrder?.items || []) {
-            if (!item.size) continue
-            const variantSize = await this.productVariantSizeRepo.findOneBy({id: item.size.id})
-            if (!variantSize) continue
+            if (item.size) {
+                const variantSize = await this.productVariantSizeRepo.findOneBy({id: item.size.id})
+                if (!variantSize) continue
 
-            variantSize.reservedQty = Math.max(Number(variantSize.reservedQty || 0) - item.qty, 0)
-            if (next === OrderDeliveryStatus.DELIVERED) {
-                variantSize.qty = Math.max(Number(variantSize.qty || 0) - item.qty, 0)
-                variantSize.soldQty = Number(variantSize.soldQty || 0) + item.qty
+                variantSize.reservedQty = Math.max(Number(variantSize.reservedQty || 0) - item.qty, 0)
+                if (next === OrderDeliveryStatus.DELIVERED) {
+                    variantSize.qty = Math.max(Number(variantSize.qty || 0) - item.qty, 0)
+                    variantSize.soldQty = Number(variantSize.soldQty || 0) + item.qty
+                }
+                await this.productVariantSizeRepo.save(variantSize)
+                continue
             }
-            await this.productVariantSizeRepo.save(variantSize)
+
+            if (!item.productVariant) continue
+            const variant = await this.productVariantRepo.findOneBy({id: item.productVariant.id})
+            if (!variant || variant.qty === null || variant.qty === undefined) continue
+
+            variant.reservedQty = Math.max(Number(variant.reservedQty || 0) - item.qty, 0)
+            if (next === OrderDeliveryStatus.DELIVERED) {
+                variant.qty = Math.max(Number(variant.qty || 0) - item.qty, 0)
+                variant.soldQty = Number(variant.soldQty || 0) + item.qty
+            }
+            await this.productVariantRepo.save(variant)
         }
     }
 
@@ -332,14 +349,40 @@ export class OrderService {
     }
 
     private mapStatusToDeliveryStatus(status: OrderStatusEntity) {
-        const title = status.title.toLowerCase()
-        if (title.includes("cancel") || title.includes("отмен")) return OrderDeliveryStatus.CANCELLED
-        if (title.includes("deliver") || title.includes("достав")) return OrderDeliveryStatus.DELIVERING
-        if (title.includes("ready") || title.includes("готов")) return OrderDeliveryStatus.READY
-        if (title.includes("complete") || title.includes("done") || title.includes("заверш")) {
+        if (status.deliveryStatus && Object.values(OrderDeliveryStatus).includes(status.deliveryStatus as OrderDeliveryStatus)) {
+            return status.deliveryStatus as OrderDeliveryStatus
+        }
+
+        const code = status.code?.trim().toLowerCase()
+        if (code && Object.values(OrderDeliveryStatus).includes(code as OrderDeliveryStatus)) {
+            return code as OrderDeliveryStatus
+        }
+
+        const statusKey = `${code || ""} ${status.title}`.toLowerCase()
+        if (statusKey.includes("cancel") || statusKey.includes("отмен")) return OrderDeliveryStatus.CANCELLED
+        if (
+            statusKey.includes("complete") ||
+            statusKey.includes("done") ||
+            statusKey.includes("closed") ||
+            statusKey.includes("заверш") ||
+            statusKey.includes("выдан")
+        ) {
             return OrderDeliveryStatus.DELIVERED
         }
-        if (title.includes("confirm") || title.includes("подтверж")) return OrderDeliveryStatus.PREPARING
+        if (statusKey.includes("deliver") || statusKey.includes("courier") || statusKey.includes("достав")) {
+            return OrderDeliveryStatus.DELIVERING
+        }
+        if (statusKey.includes("ready") || statusKey.includes("готов")) return OrderDeliveryStatus.READY
+        if (
+            statusKey.includes("confirm") ||
+            statusKey.includes("accept") ||
+            statusKey.includes("prepar") ||
+            statusKey.includes("подтверж") ||
+            statusKey.includes("принят") ||
+            statusKey.includes("готовит")
+        ) {
+            return OrderDeliveryStatus.PREPARING
+        }
         return OrderDeliveryStatus.PENDING
     }
 
