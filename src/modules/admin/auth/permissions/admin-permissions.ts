@@ -13,6 +13,7 @@ export type AdminPermissionModuleCode =
     | "integrations"
     | "staff"
     | "files"
+    | "pos"
 
 export type AdminPermissionCode = `${AdminPermissionModuleCode}.${AdminPermissionAction}`
 
@@ -80,6 +81,11 @@ const MODULES: Array<Omit<AdminPermissionModule, "permissions">> = [
         code: "files",
         title: "Файлы",
         description: "Загрузка и удаление изображений"
+    },
+    {
+        code: "pos",
+        title: "POS",
+        description: "Продажи в магазине, смены, сканер, оплаты, чеки и возвраты"
     }
 ]
 
@@ -172,6 +178,7 @@ function moduleFromPath(path: string): AdminPermissionModuleCode | null {
     if (path.startsWith("/admin/clients")) return "clients"
     if (path.startsWith("/admin/promo-codes")) return "marketing"
     if (path.startsWith("/admin/integrations")) return "integrations"
+    if (path.startsWith("/admin/pos")) return "pos"
     if (path.startsWith("/admin/search-zero-results")) return "catalog"
     if (path.startsWith("/admin/image")) return "files"
     if (path.startsWith("/admin/roles") || path.startsWith("/admin/employees")) return "staff"
@@ -186,6 +193,7 @@ function moduleFromPath(path: string): AdminPermissionModuleCode | null {
     }
     if (path.startsWith("/payment-method")) return "settings"
     if (
+        path.startsWith("/admin/product-barcodes") ||
         path.startsWith("/admin/product") ||
         path.startsWith("/admin/color") ||
         path.startsWith("/admin/size") ||

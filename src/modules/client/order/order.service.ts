@@ -500,6 +500,7 @@ export class ClientOrderService {
                 client,
                 clientAddress,
                 accessToken: authenticatedClientId ? null : this.createOrderAccessToken(),
+                orderSource: "site",
                 paymentStatus: OrderPaymentStatus.PENDING,
                 deliveryStatus: OrderDeliveryStatus.PENDING
             })

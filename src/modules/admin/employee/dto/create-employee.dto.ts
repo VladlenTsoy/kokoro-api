@@ -46,6 +46,12 @@ export class CreateEmployeeDto {
     @IsInt({each: true})
     roleIds?: number[]
 
+    @ApiProperty({example: [1, 2], required: false, description: "Sales points where seller/manager can work in POS"})
+    @IsArray()
+    @IsOptional()
+    @IsInt({each: true})
+    salesPointIds?: number[]
+
     @ApiProperty({example: true, required: false})
     @IsBoolean()
     @IsOptional()

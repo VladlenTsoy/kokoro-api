@@ -9,6 +9,9 @@ import {OrderItemEntity} from "../../order-item/entities/order-item.entity"
 import {EmployeeEntity} from "../../employee/entities/employee.entity"
 import {OrderStatusHistoryEntity} from "../../order-status-history/entities/order-status-history.entity"
 import {OrderCommentEntity} from "./order-comment.entity"
+import {SalesPointEntity} from "../../sales-point/entities/sales-point.entity"
+import {PosDeviceEntity} from "../../pos/entities/pos-device.entity"
+import {PosShiftEntity} from "../../pos/entities/pos-shift.entity"
 
 export enum OrderPaymentStatus {
     PENDING = "pending",
@@ -54,6 +57,18 @@ export class OrderEntity {
 
     @ManyToOne(() => EmployeeEntity, {nullable: true, onDelete: "SET NULL"})
     assignedEmployee?: EmployeeEntity | null
+
+    @Column({type: "varchar", length: 32, default: "admin"})
+    orderSource: string
+
+    @ManyToOne(() => SalesPointEntity, {nullable: true, onDelete: "SET NULL"})
+    salesPoint?: SalesPointEntity | null
+
+    @ManyToOne(() => PosShiftEntity, {nullable: true, onDelete: "SET NULL"})
+    posShift?: PosShiftEntity | null
+
+    @ManyToOne(() => PosDeviceEntity, {nullable: true, onDelete: "SET NULL"})
+    posDevice?: PosDeviceEntity | null
 
     @Column({type: "enum", enum: OrderPaymentStatus, default: OrderPaymentStatus.PENDING})
     paymentStatus: OrderPaymentStatus

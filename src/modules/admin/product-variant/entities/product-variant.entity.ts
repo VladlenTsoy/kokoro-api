@@ -20,6 +20,7 @@ import {ProductVariantDiscountEntity} from "../../product-variant-discount/entit
 import {ProductVariantMeasurementEntity} from "../../product-variant-measurement/entities/product-variant-measurement.entity"
 import {ProductVariantStatusEntity} from "../../product-variant-status/entities/product-variant-status.entity"
 import {CollectionEntity} from "../../collection/entities/collection.entity"
+import {ProductStorageEntity} from "../../product-storage/entities/product-storage.entity"
 
 @Entity("product_variants")
 export class ProductVariantEntity {
@@ -129,6 +130,11 @@ export class ProductVariantEntity {
     @ManyToOne(() => ProductVariantStatusEntity)
     @JoinColumn({name: "status_id"})
     status: ProductVariantStatusEntity
+
+    @ApiProperty()
+    @ManyToOne(() => ProductStorageEntity)
+    @JoinColumn({name: "storage_id"})
+    storage: ProductStorageEntity
 
     @ApiProperty({
         type: () => [ProductVariantSizeEntity]

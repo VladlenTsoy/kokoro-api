@@ -408,6 +408,7 @@ export class OrderService {
             subtotal: dto.total,
             deliveryPrice,
             total: dto.total + deliveryPrice,
+            orderSource: "admin",
             paymentStatus: OrderPaymentStatus.PENDING,
             deliveryStatus: this.mapStatusToDeliveryStatus(status)
         })

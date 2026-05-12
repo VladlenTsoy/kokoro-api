@@ -8,12 +8,15 @@ import {AssignRolesDto} from "./dto/assign-roles.dto"
 import {RoleService} from "../role/role.service"
 import {AuthCryptoService} from "../auth/auth-crypto.service"
 import {ALL_ADMIN_PERMISSION_CODES, isSuperAdmin} from "../auth/permissions/admin-permissions"
+import {SalesPointEntity} from "../sales-point/entities/sales-point.entity"
 
 @Injectable()
 export class EmployeeService {
     constructor(
         @InjectRepository(EmployeeEntity)
         private readonly employeeRepository: Repository<EmployeeEntity>,
+        @InjectRepository(SalesPointEntity)
+        private readonly salesPointRepository: Repository<SalesPointEntity>,
         private readonly roleService: RoleService,
         private readonly authCryptoService: AuthCryptoService
     ) {}
@@ -53,6 +56,10 @@ export class EmployeeService {
             ? await this.roleService.findByIds(createEmployeeDto.roleIds)
             : []
 
+        const salesPoints = createEmployeeDto.salesPointIds?.length
+            ? await this.salesPointRepository.findByIds(createEmployeeDto.salesPointIds)
+            : []
+
         const employee = this.employeeRepository.create({
             email: createEmployeeDto.email.toLowerCase().trim(),
             firstName: createEmployeeDto.firstName.trim(),
@@ -61,7 +68,8 @@ export class EmployeeService {
             isActive: createEmployeeDto.isActive ?? true,
             passwordHash: passwordData.hash,
             passwordSalt: passwordData.salt,
-            roles
+            roles,
+            salesPoints
         })
 
         const savedEmployee = await this.employeeRepository.save(employee)
@@ -114,6 +122,11 @@ export class EmployeeService {
 
         if (updateEmployeeDto.roleIds) {
             employee.roles = await this.roleService.findByIds(updateEmployeeDto.roleIds)
+        }
+        if (updateEmployeeDto.salesPointIds) {
+            employee.salesPoints = updateEmployeeDto.salesPointIds.length
+                ? await this.salesPointRepository.findByIds(updateEmployeeDto.salesPointIds)
+                : []
         }
 
         const savedEmployee = await this.employeeRepository.save(employee)
