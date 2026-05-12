@@ -5,9 +5,10 @@ import {EmployeeService} from "./employee.service"
 import {EmployeeController} from "./employee.controller"
 import {RoleModule} from "../role/role.module"
 import {AuthCryptoService} from "../auth/auth-crypto.service"
+import {SalesPointEntity} from "../sales-point/entities/sales-point.entity"
 
 @Module({
-    imports: [TypeOrmModule.forFeature([EmployeeEntity]), RoleModule],
+    imports: [TypeOrmModule.forFeature([EmployeeEntity, SalesPointEntity]), RoleModule],
     controllers: [EmployeeController],
     providers: [EmployeeService, AuthCryptoService],
     exports: [EmployeeService]

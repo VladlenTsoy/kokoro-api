@@ -34,6 +34,8 @@ import {CollectionModule} from "./collection/collection.module"
 import {AdminClientModule} from "./client/client.module"
 import {PromoCodeModule} from "./promo-code/promo-code.module"
 import {IntegrationModule} from "./integration/integration.module"
+import {PosModule} from "./pos/pos.module"
+import {ProductBarcodeModule} from "./product-barcode/product-barcode.module"
 
 @Module({
     imports: [
@@ -68,7 +70,9 @@ import {IntegrationModule} from "./integration/integration.module"
         CollectionModule,
         AdminClientModule,
         PromoCodeModule,
-        IntegrationModule
+        IntegrationModule,
+        PosModule,
+        ProductBarcodeModule
     ],
     providers: [
         AppService,

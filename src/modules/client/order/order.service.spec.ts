@@ -16,12 +16,21 @@ describe("ClientOrderService access guards", () => {
         const dataSource = {
             getRepository: jest.fn()
         }
+        const integrationService = {
+            enqueue: jest.fn()
+        }
 
         return {
-            service: new ClientOrderService(dataSource as any, orderRepository as any, historyRepository as any),
+            service: new ClientOrderService(
+                dataSource as any,
+                orderRepository as any,
+                historyRepository as any,
+                integrationService as any
+            ),
             orderRepository,
             historyRepository,
-            dataSource
+            dataSource,
+            integrationService
         }
     }
 

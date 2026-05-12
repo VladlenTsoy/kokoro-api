@@ -9,6 +9,7 @@ import {
     UpdateDateColumn
 } from "typeorm"
 import {RoleEntity} from "../../role/entities/role.entity"
+import {SalesPointEntity} from "../../sales-point/entities/sales-point.entity"
 
 @Entity("admin_employees")
 export class EmployeeEntity {
@@ -49,6 +50,14 @@ export class EmployeeEntity {
         inverseJoinColumn: {name: "role_id", referencedColumnName: "id"}
     })
     roles: RoleEntity[]
+
+    @ManyToMany(() => SalesPointEntity, {eager: true})
+    @JoinTable({
+        name: "admin_employee_sales_points",
+        joinColumn: {name: "employee_id", referencedColumnName: "id"},
+        inverseJoinColumn: {name: "sales_point_id", referencedColumnName: "id"}
+    })
+    salesPoints: SalesPointEntity[]
 
     @CreateDateColumn()
     createdAt: Date
